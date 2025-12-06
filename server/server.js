@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import db from "./connection/conn.js";
 import passport from "./config/passport.js";
+import session from "express-session";
 
 import ownerAuthRoutes from "./routes/ownerAuthRoutes.js";
 import trainerAuthRoutes from "./routes/trainerAuthRoutes.js";

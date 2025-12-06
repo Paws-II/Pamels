@@ -7,6 +7,7 @@ import {
   setTokenCookie,
   clearTokenCookie,
 } from "../config/jwtConfig.js";
+import passport from "passport";
 
 const unifiedAuthController = {
   login: async (req, res) => {
@@ -81,6 +82,57 @@ const unifiedAuthController = {
         message: "Login failed",
       });
     }
+  },
+
+  googleOwnerAuth: (req, res, next) => {
+    req.session.signupRole = "owner";
+
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+    })(req, res, next);
+  },
+
+  googleTrainerAuth: (req, res, next) => {
+    req.session.signupRole = "trainer";
+
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+    })(req, res, next);
+  },
+
+  googleCommonAuth: (req, res, next) => {
+    req.session.signupRole = null;
+
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+    })(req, res, next);
+  },
+
+  googleCallback: (req, res, next) => {
+    passport.authenticate("google", (err, user, info) => {
+      if (err) {
+        console.error("Google callback error:", err);
+        return res.redirect(
+          `${process.env.CLIENT_URL}/login?error=auth_failed`
+        );
+      }
+
+      if (!user) {
+        const message = info?.message || "authentication_failed";
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=${message}`);
+      }
+
+      const token = generateToken(user._id, user.role);
+      setTokenCookie(res, token);
+
+      if (user.role === "owner") {
+        return res.redirect(`${process.env.CLIENT_URL}/owner-dashboard`);
+      } else if (user.role === "trainer") {
+        return res.redirect(`${process.env.CLIENT_URL}/trainer-dashboard`);
+      }
+
+      return res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+    })(req, res, next);
   },
 
   logout: (req, res) => {
