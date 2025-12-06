@@ -80,24 +80,22 @@ const Login = () => {
 
         <button
           type="button"
-          className="
-            w-full py-2 mb-5 rounded-lg font-medium
-            flex items-center justify-center gap-2
-            bg-gray-900/60 text-gray-200
-            border border-gray-600 hover:bg-gray-900 transition
-          "
-          disabled
+          onClick={() => {
+            window.location.href = `${API_URL}/api/auth/google/login`;
+          }}
+          className="w-full py-2 mb-5 rounded-lg font-medium
+          flex items-center justify-center gap-2
+           bg-white text-gray-800
+           border border-gray-300 hover:bg-gray-50 transition"
         >
           <span
-            className="
-              w-5 h-5 rounded-full bg-white
-              flex items-center justify-center
-              text-xs font-bold text-gray-800
-            "
+            className="w-5 h-5 rounded-full bg-white
+            flex items-center justify-center
+            text-xs font-bold text-gray-800"
           >
             G
           </span>
-          <span>Continue with Google (Coming Soon)</span>
+          <span>Continue with Google</span>
         </button>
 
         <div className="flex items-center my-4">

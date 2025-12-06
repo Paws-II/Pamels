@@ -167,6 +167,33 @@ const OwnerSignup = () => {
           shadow-l
         "
       >
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = `${API_URL}/api/auth/google/owner`;
+          }}
+          className="w-full py-2 mb-4 rounded-lg font-medium
+          flex items-center justify-center gap-2
+           bg-white text-gray-800
+           border border-gray-300 hover:bg-gray-50 transition"
+        >
+          <span
+            className="w-5 h-5 rounded-full bg-white
+            flex items-center justify-center
+            text-xs font-bold text-gray-800"
+          >
+            G
+          </span>
+
+          <span>Sign up with Google</span>
+        </button>
+
+        <div className="flex items-center my-4">
+          <div className="grow h-px bg-gray-700" />
+          <span className="px-3 text-sm text-gray-400">or</span>
+          <div className="grow h-px bg-gray-700" />
+        </div>
+
         <h2 className="mb-6 text-3xl font-semibold text-center text-blue-400">
           {isOTPSent ? "Verify Your Email" : "Signup for Owners"}
         </h2>
