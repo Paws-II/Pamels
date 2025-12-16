@@ -31,7 +31,7 @@ const DemoButtons = () => {
           hover:bg-gray-800
           transition
         "
-        onClick={() => navigate("/signupTrainer")}
+        onClick={() => navigate("/signupShelter")}
       >
         Sign Up (T)
       </button>

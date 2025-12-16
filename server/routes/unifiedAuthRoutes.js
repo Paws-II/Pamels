@@ -9,7 +9,7 @@ router.post("/login", unifiedAuthController.login);
 router.post("/logout", authenticateJWT, unifiedAuthController.logout);
 
 router.get("/google/owner", unifiedAuthController.googleOwnerAuth);
-router.get("/google/trainer", unifiedAuthController.googleTrainerAuth);
+router.get("/google/shelter", unifiedAuthController.googleShelterAuth);
 router.get("/google/login", unifiedAuthController.googleCommonAuth);
 router.get("/google/callback", unifiedAuthController.googleCallback);
 

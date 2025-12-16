@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const trainerProfileSchema = new mongoose.Schema(
+const shelterProfileSchema = new mongoose.Schema(
   {
-    trainerId: {
+    shelterId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "TrainerLogin",
+      ref: "ShelterLogin",
       required: true,
     },
 
@@ -15,13 +15,13 @@ const trainerProfileSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      default: "trainer",
+      default: "shelter",
       immutable: true,
     },
 
     name: {
       type: String,
-      default: "New Trainer",
+      default: "New Shelter",
     },
 
     avatar: {
@@ -51,7 +51,7 @@ const trainerProfileSchema = new mongoose.Schema(
 
     bio: {
       type: String,
-      default: "Certified trainer with a passion for pet behavior and care.",
+      default: "Certified shelter with a passion for pet behavior and care.",
     },
 
     createdAt: {
@@ -62,4 +62,4 @@ const trainerProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("TrainerProfile", trainerProfileSchema);
+export default mongoose.model("ShelterProfile", shelterProfileSchema);

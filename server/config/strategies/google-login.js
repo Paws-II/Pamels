@@ -4,9 +4,9 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import CheckLogin from "../../models/loginSystem/CheckLogin.js";
 import OwnerLogin from "../../models/loginSystem/OwnerLogin.js";
-import TrainerLogin from "../../models/loginSystem/TrainerLogin.js";
+import ShelterLogin from "../../models/loginSystem/ShelterLogin.js";
 import OwnerProfile from "../../models/profiles/OwnerProfile.js";
-import TrainerProfile from "../../models/profiles/TrainerProfile.js";
+import ShelterProfile from "../../models/profiles/ShelterProfile.js";
 
 const googleStrategy = new GoogleStrategy(
   {
@@ -29,8 +29,8 @@ const googleStrategy = new GoogleStrategy(
 
         if (existingCheck.role === "owner") {
           userLogin = await OwnerLogin.findById(existingCheck.userRef);
-        } else if (existingCheck.role === "trainer") {
-          userLogin = await TrainerLogin.findById(existingCheck.userRef);
+        } else if (existingCheck.role === "shelter") {
+          userLogin = await ShelterLogin.findById(existingCheck.userRef);
         }
 
         if (!userLogin) {
@@ -45,7 +45,7 @@ const googleStrategy = new GoogleStrategy(
         });
       }
 
-      if (!role || !["owner", "trainer"].includes(role)) {
+      if (!role || !["owner", "shelter"].includes(role)) {
         return done(null, false, { message: "Invalid role for signup" });
       }
 
@@ -75,20 +75,20 @@ const googleStrategy = new GoogleStrategy(
         });
         await newUserProfile.save();
       } else {
-        newUserLogin = new TrainerLogin({
+        newUserLogin = new ShelterLogin({
           email,
           password: hashedPassword,
-          role: "trainer",
+          role: "shelter",
           mode: "google",
           tempPassword,
           otpVerified: true,
         });
         await newUserLogin.save();
 
-        newUserProfile = new TrainerProfile({
-          trainerId: newUserLogin._id,
+        newUserProfile = new ShelterProfile({
+          shelterId: newUserLogin._id,
           email,
-          role: "trainer",
+          role: "shelter",
           name,
           avatar,
         });
@@ -101,7 +101,7 @@ const googleStrategy = new GoogleStrategy(
         role,
         loginMode: "google",
         userRef: newUserLogin._id,
-        roleRef: role === "owner" ? "OwnerLogin" : "TrainerLogin",
+        roleRef: role === "owner" ? "OwnerLogin" : "ShelterLogin",
       });
       await checkLogin.save();
 
@@ -121,4 +121,4 @@ const googleStrategy = new GoogleStrategy(
 
 export default googleStrategy;
 
-//remember i have temply removed else if case for trainer via else assuming we have two role for now
+//remember i have temply removed else if case for shelter via else assuming we have two role for now

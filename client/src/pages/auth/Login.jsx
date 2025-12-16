@@ -43,8 +43,8 @@ const Login = () => {
         setTimeout(() => {
           if (response.data.user.role === "owner") {
             window.location.href = "/owner-dashboard";
-          } else if (response.data.user.role === "trainer") {
-            window.location.href = "/trainer-dashboard";
+          } else if (response.data.user.role === "shelter") {
+            window.location.href = "/shelter-dashboard";
           } else {
             window.location.href = "/dashboard";
           }
@@ -167,8 +167,8 @@ const Login = () => {
             Sign up as Owner
           </a>
           {" or "}
-          <a href="/signupTrainer" className="text-blue-400 hover:underline">
-            Sign up as Trainer
+          <a href="/signupShelter" className="text-blue-400 hover:underline">
+            Sign up as Shelter
           </a>
         </p>
       </div>

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import CheckLogin from "../models/loginSystem/CheckLogin.js";
 import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import TrainerLogin from "../models/loginSystem/TrainerLogin.js";
+import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
 import { generateOTP, sendOTPEmail } from "../config/emailService.js";
 
 const forgotPasswordController = {
@@ -28,8 +28,8 @@ const forgotPasswordController = {
       let userLogin = null;
       if (checkLogin.role === "owner") {
         userLogin = await OwnerLogin.findById(checkLogin.userRef);
-      } else if (checkLogin.role === "trainer") {
-        userLogin = await TrainerLogin.findById(checkLogin.userRef);
+      } else if (checkLogin.role === "shelter") {
+        userLogin = await ShelterLogin.findById(checkLogin.userRef);
       }
 
       if (!userLogin) {
@@ -80,8 +80,8 @@ const forgotPasswordController = {
           otp,
           otpExpiresAt: { $gt: new Date() },
         });
-      } else if (checkLogin.role === "trainer") {
-        userLogin = await TrainerLogin.findOne({
+      } else if (checkLogin.role === "shelter") {
+        userLogin = await ShelterLogin.findOne({
           _id: checkLogin.userRef,
           otp,
           otpExpiresAt: { $gt: new Date() },
@@ -137,8 +137,8 @@ const forgotPasswordController = {
           otp,
           otpExpiresAt: { $gt: new Date() },
         });
-      } else if (checkLogin.role === "trainer") {
-        userLogin = await TrainerLogin.findOne({
+      } else if (checkLogin.role === "shelter") {
+        userLogin = await ShelterLogin.findOne({
           _id: checkLogin.userRef,
           otp,
           otpExpiresAt: { $gt: new Date() },
@@ -190,8 +190,8 @@ const forgotPasswordController = {
       let userLogin = null;
       if (checkLogin.role === "owner") {
         userLogin = await OwnerLogin.findById(checkLogin.userRef);
-      } else if (checkLogin.role === "trainer") {
-        userLogin = await TrainerLogin.findById(checkLogin.userRef);
+      } else if (checkLogin.role === "shelter") {
+        userLogin = await ShelterLogin.findById(checkLogin.userRef);
       }
 
       if (!userLogin) {

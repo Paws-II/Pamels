@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-const TrainerDashboard = () => {
+const ShelterDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,7 +14,7 @@ const TrainerDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/trainer/profile`, {
+      const response = await axios.get(`${API_URL}/api/auth/shelter/profile`, {
         withCredentials: true,
       });
 
@@ -52,7 +52,7 @@ const TrainerDashboard = () => {
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>Trainer Dashboard</h1>
+      <h1>Shelter Dashboard</h1>
 
       <div
         style={{ marginTop: "20px", border: "1px solid #ccc", padding: "15px" }}
@@ -137,4 +137,4 @@ const TrainerDashboard = () => {
   );
 };
 
-export default TrainerDashboard;
+export default ShelterDashboard;

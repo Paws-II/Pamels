@@ -4,7 +4,7 @@ import OTPForm from "./OTPForm";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-const TrainerSignup = () => {
+const ShelterSignup = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,7 +29,7 @@ const TrainerSignup = () => {
 
     try {
       const { data } = await axios.post(
-        `${API_URL}/api/auth/trainer/check-email`,
+        `${API_URL}/api/auth/shelter/check-email`,
         { email: formData.email },
         { withCredentials: true }
       );
@@ -70,7 +70,7 @@ const TrainerSignup = () => {
 
     try {
       const { data } = await axios.post(
-        `${API_URL}/api/auth/trainer/signup`,
+        `${API_URL}/api/auth/shelter/signup`,
         {
           email: formData.email,
           password: formData.password,
@@ -107,7 +107,7 @@ const TrainerSignup = () => {
 
     try {
       const { data } = await axios.post(
-        `${API_URL}/api/auth/trainer/verify-otp`,
+        `${API_URL}/api/auth/shelter/verify-otp`,
         { email: formData.email, otp: formData.otp },
         { withCredentials: true }
       );
@@ -115,7 +115,7 @@ const TrainerSignup = () => {
       if (data.success) {
         setMessage({ type: "success", text: "Email verified! Redirecting..." });
         localStorage.setItem("token", data.token);
-        setTimeout(() => (window.location.href = "/trainer-dashboard"), 1500);
+        setTimeout(() => (window.location.href = "/shelter-dashboard"), 1500);
       }
     } catch (err) {
       console.error("OTP verification error:", err);
@@ -134,7 +134,7 @@ const TrainerSignup = () => {
 
     try {
       const { data } = await axios.post(
-        `${API_URL}/api/auth/trainer/resend-otp`,
+        `${API_URL}/api/auth/shelter/resend-otp`,
         { email: formData.email },
         { withCredentials: true }
       );
@@ -170,7 +170,7 @@ const TrainerSignup = () => {
         <button
           type="button"
           onClick={() => {
-            window.location.href = `${API_URL}/api/auth/google/trainer`;
+            window.location.href = `${API_URL}/api/auth/google/shelter`;
           }}
           className="w-full py-2 mb-4 rounded-lg font-medium
           flex items-center justify-center gap-2
@@ -189,7 +189,7 @@ const TrainerSignup = () => {
           <div className="grow h-px bg-gray-700" />
         </div>
         <h2 className="mb-6 text-3xl font-semibold text-center text-blue-400">
-          {isOTPSent ? "Verify Your Email" : "Signup for Trainers"}
+          {isOTPSent ? "Verify Your Email" : "Signup for Shelters"}
         </h2>
 
         {message.text && (
@@ -310,4 +310,4 @@ const TrainerSignup = () => {
   );
 };
 
-export default TrainerSignup;
+export default ShelterSignup;

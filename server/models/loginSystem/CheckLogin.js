@@ -14,7 +14,7 @@ const checkLoginSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["owner", "trainer"],
+      enum: ["owner", "shelter"],
       required: true,
     },
 
@@ -38,7 +38,7 @@ const checkLoginSchema = new mongoose.Schema(
     roleRef: {
       type: String,
       required: true,
-      enum: ["OwnerLogin", "TrainerLogin"],
+      enum: ["OwnerLogin", "ShelterLogin"],
     },
   },
   { timestamps: true }

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 import CheckLogin from "../models/loginSystem/CheckLogin.js";
 import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import TrainerLogin from "../models/loginSystem/TrainerLogin.js";
+import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
 import {
   generateToken,
   setTokenCookie,
@@ -33,8 +33,8 @@ const unifiedAuthController = {
       let userLogin = null;
       if (checkLogin.role === "owner") {
         userLogin = await OwnerLogin.findById(checkLogin.userRef);
-      } else if (checkLogin.role === "trainer") {
-        userLogin = await TrainerLogin.findById(checkLogin.userRef);
+      } else if (checkLogin.role === "shelter") {
+        userLogin = await ShelterLogin.findById(checkLogin.userRef);
       }
 
       if (!userLogin) {
@@ -94,8 +94,8 @@ const unifiedAuthController = {
     })(req, res, next);
   },
 
-  googleTrainerAuth: (req, res, next) => {
-    req.session.signupRole = "trainer";
+  googleShelterAuth: (req, res, next) => {
+    req.session.signupRole = "shelter";
 
     passport.authenticate("google", {
       scope: ["profile", "email"],
@@ -129,8 +129,8 @@ const unifiedAuthController = {
 
       if (user.role === "owner") {
         return res.redirect(`${process.env.CLIENT_URL}/owner-dashboard`);
-      } else if (user.role === "trainer") {
-        return res.redirect(`${process.env.CLIENT_URL}/trainer-dashboard`);
+      } else if (user.role === "shelter") {
+        return res.redirect(`${process.env.CLIENT_URL}/shelter-dashboard`);
       }
 
       return res.redirect(`${process.env.CLIENT_URL}/dashboard`);

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import CheckLogin from "../models/loginSystem/CheckLogin.js";
-import TrainerLogin from "../models/loginSystem/TrainerLogin.js";
-import TrainerProfile from "../models/profiles/TrainerProfile.js";
+import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
+import ShelterProfile from "../models/profiles/ShelterProfile.js";
 
 import { generateOTP, sendOTPEmail } from "../config/emailService.js";
 import {
@@ -10,7 +10,7 @@ import {
   clearTokenCookie,
 } from "../config/jwtConfig.js";
 
-const trainerAuthController = {
+const shelterAuthController = {
   checkEmail: async (req, res) => {
     try {
       const { email } = req.body;
@@ -72,35 +72,35 @@ const trainerAuthController = {
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      const trainerLogin = new TrainerLogin({
+      const shelterLogin = new ShelterLogin({
         email,
         password: hashedPassword,
-        role: "trainer",
+        role: "shelter",
         mode: "manual",
         otp,
         otpExpiresAt,
         otpVerified: false,
       });
-      await trainerLogin.save();
+      await shelterLogin.save();
 
-      const trainerProfile = new TrainerProfile({
-        trainerId: trainerLogin._id,
-        email: trainerLogin.email,
-        role: "trainer",
+      const shelterProfile = new ShelterProfile({
+        shelterId: shelterLogin._id,
+        email: shelterLogin.email,
+        role: "shelter",
       });
-      await trainerProfile.save();
+      await shelterProfile.save();
 
       const checkLogin = new CheckLogin({
         email,
         password: hashedPassword,
-        role: "trainer",
+        role: "shelter",
         loginMode: "manual",
-        userRef: trainerLogin._id,
-        roleRef: "TrainerLogin",
+        userRef: shelterLogin._id,
+        roleRef: "ShelterLogin",
       });
       await checkLogin.save();
 
-      await sendOTPEmail(email, otp, "New Trainer", "verification");
+      await sendOTPEmail(email, otp, "New Shelter", "verification");
 
       return res.status(201).json({
         success: true,
@@ -110,7 +110,7 @@ const trainerAuthController = {
         devOTP: process.env.NODE_ENV === "development" ? otp : undefined,
       });
     } catch (err) {
-      console.error("Trainer signup error:", err);
+      console.error("Shelter signup error:", err);
       return res.status(500).json({ success: false, message: "Signup failed" });
     }
   },
@@ -125,25 +125,25 @@ const trainerAuthController = {
           .json({ success: false, message: "Email and OTP are required" });
       }
 
-      const trainerLogin = await TrainerLogin.findOne({
+      const shelterLogin = await ShelterLogin.findOne({
         email,
         otp,
         otpExpiresAt: { $gt: new Date() },
         otpVerified: false,
       });
 
-      if (!trainerLogin) {
+      if (!shelterLogin) {
         return res
           .status(400)
           .json({ success: false, message: "Invalid or expired OTP" });
       }
 
-      trainerLogin.otpVerified = true;
-      trainerLogin.otp = null;
-      trainerLogin.otpExpiresAt = null;
-      await trainerLogin.save();
+      shelterLogin.otpVerified = true;
+      shelterLogin.otp = null;
+      shelterLogin.otpExpiresAt = null;
+      await shelterLogin.save();
 
-      const token = generateToken(trainerLogin._id, "trainer");
+      const token = generateToken(shelterLogin._id, "shelter");
       setTokenCookie(res, token);
 
       return res.json({
@@ -151,9 +151,9 @@ const trainerAuthController = {
         message: "Email verified successfully!",
         token,
         user: {
-          _id: trainerLogin._id,
-          email: trainerLogin.email,
-          role: trainerLogin.role,
+          _id: shelterLogin._id,
+          email: shelterLogin.email,
+          role: shelterLogin.role,
         },
       });
     } catch (err) {
@@ -174,12 +174,12 @@ const trainerAuthController = {
           .json({ success: false, message: "Email is required" });
       }
 
-      const trainerLogin = await TrainerLogin.findOne({
+      const shelterLogin = await ShelterLogin.findOne({
         email,
         otpVerified: false,
       });
 
-      if (!trainerLogin) {
+      if (!shelterLogin) {
         return res.status(404).json({
           success: false,
           message: "No pending verification found for this email",
@@ -189,11 +189,11 @@ const trainerAuthController = {
       const otp = generateOTP();
       const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-      trainerLogin.otp = otp;
-      trainerLogin.otpExpiresAt = otpExpiresAt;
-      await trainerLogin.save();
+      shelterLogin.otp = otp;
+      shelterLogin.otpExpiresAt = otpExpiresAt;
+      await shelterLogin.save();
 
-      await sendOTPEmail(email, otp, "Trainer", "verification");
+      await sendOTPEmail(email, otp, "Shelter", "verification");
 
       return res.json({
         success: true,
@@ -210,17 +210,17 @@ const trainerAuthController = {
 
   getProfile: async (req, res) => {
     try {
-      const trainerProfile = await TrainerProfile.findOne({
-        trainerId: req.userId,
-      }).populate("trainerId", "-password -otp -otpExpiresAt");
+      const shelterProfile = await ShelterProfile.findOne({
+        shelterId: req.userId,
+      }).populate("shelterId", "-password -otp -otpExpiresAt");
 
-      if (!trainerProfile) {
+      if (!shelterProfile) {
         return res
           .status(404)
           .json({ success: false, message: "Profile not found" });
       }
 
-      return res.json({ success: true, profile: trainerProfile });
+      return res.json({ success: true, profile: shelterProfile });
     } catch (err) {
       console.error("Get profile error:", err);
       return res
@@ -231,25 +231,25 @@ const trainerAuthController = {
 
   getProfileWithAuth: async (req, res) => {
     try {
-      const trainerProfile = await TrainerProfile.findOne({
-        trainerId: req.userId,
-      }).populate("trainerId", "-password -otp -otpExpiresAt");
+      const shelterProfile = await ShelterProfile.findOne({
+        shelterId: req.userId,
+      }).populate("shelterId", "-password -otp -otpExpiresAt");
 
-      if (!trainerProfile) {
+      if (!shelterProfile) {
         return res
           .status(404)
           .json({ success: false, message: "Profile not found" });
       }
 
-      const trainerLogin = await TrainerLogin.findById(req.userId);
+      const shelterLogin = await ShelterLogin.findById(req.userId);
 
       return res.json({
         success: true,
         profile: {
-          ...trainerProfile.toObject(),
-          mode: trainerLogin.mode,
+          ...shelterProfile.toObject(),
+          mode: shelterLogin.mode,
           tempPassword:
-            trainerLogin.mode === "google" ? trainerLogin.tempPassword : null,
+            shelterLogin.mode === "google" ? shelterLogin.tempPassword : null,
         },
       });
     } catch (err) {
@@ -271,4 +271,4 @@ const trainerAuthController = {
   },
 };
 
-export default trainerAuthController;
+export default shelterAuthController;

@@ -9,7 +9,7 @@ import passport from "./config/passport.js";
 import session from "express-session";
 
 import ownerAuthRoutes from "./routes/ownerAuthRoutes.js";
-import trainerAuthRoutes from "./routes/trainerAuthRoutes.js";
+import shelterAuthRoutes from "./routes/shelterAuthRoutes.js";
 import unifiedAuthRoutes from "./routes/unifiedAuthRoutes.js";
 import forgotPasswordRoutes from "./routes/forgotPasswordRoutes.js";
 
@@ -43,7 +43,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/auth/owner", ownerAuthRoutes);
-app.use("/api/auth/trainer", trainerAuthRoutes);
+app.use("/api/auth/shelter", shelterAuthRoutes);
 app.use("/api/auth", unifiedAuthRoutes);
 app.use("/api/auth/forgot-password", forgotPasswordRoutes);
 

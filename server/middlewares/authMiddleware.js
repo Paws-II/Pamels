@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import TrainerLogin from "../models/loginSystem/TrainerLogin.js";
+import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
 
 const extractToken = (req) => {
   let token = null;
@@ -32,8 +32,8 @@ const authenticateJWT = async (req, res, next) => {
     let user = null;
     if (decoded.role === "owner") {
       user = await OwnerLogin.findById(decoded.userId).select("-password");
-    } else if (decoded.role === "trainer") {
-      user = await TrainerLogin.findById(decoded.userId).select("-password");
+    } else if (decoded.role === "shelter") {
+      user = await ShelterLogin.findById(decoded.userId).select("-password");
     }
 
     if (!user) {

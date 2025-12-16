@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
 
-const trainerLoginSchema = new mongoose.Schema(
+const shelterLoginSchema = new mongoose.Schema(
   {
     email: {
       type: String,
@@ -17,7 +17,7 @@ const trainerLoginSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      default: "trainer",
+      default: "shelter",
       immutable: true,
     },
 
@@ -55,4 +55,4 @@ const trainerLoginSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("TrainerLogin", trainerLoginSchema);
+export default mongoose.model("ShelterLogin", shelterLoginSchema);
