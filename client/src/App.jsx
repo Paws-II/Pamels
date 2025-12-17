@@ -3,9 +3,11 @@ import Hero from "./pages/Guests/Hero";
 import Navbar from "./pages/Guests/Navbar";
 import Demo from "./pages/Guests/Demo";
 
-const Home = () => {
+const App = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [themeIndex, setThemeIndex] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,11 +23,16 @@ const Home = () => {
         isScrolled={isScrolled}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
+        currentSlideIndex={activeIndex}
       />
-      <Hero />
+      <Hero
+        activeIndex={activeIndex}
+        setActiveIndex={setActiveIndex}
+        onThemeChange={setThemeIndex}
+      />
       <Demo />
     </div>
   );
 };
 
-export default Home;
+export default App;

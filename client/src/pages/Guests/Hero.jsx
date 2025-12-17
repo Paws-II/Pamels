@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { gsap } from "gsap";
 import HeroNarrative from "../../components/Guests/Hero/HeroNarrative";
+import Navbar from "./Navbar";
 import HeroShowcase from "../../components/Guests/Hero/HeroShowcase";
 import dog from "../../assets/Guests/animals/dog.png";
 import cat from "../../assets/Guests/animals/cat.png";
@@ -57,8 +58,7 @@ const getCardStates = (activeIdx, totalCards) => {
   };
 };
 
-const Hero = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
   const [isPaused, setIsPaused] = useState(false);
 
   const heroSectionRef = useRef(null);
@@ -172,6 +172,8 @@ const Hero = () => {
       hasMountedRef.current = true;
       return;
     }
+
+    onThemeChange(activeIndex);
 
     if (timelineRef.current) {
       timelineRef.current.kill();
