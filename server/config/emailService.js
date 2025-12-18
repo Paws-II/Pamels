@@ -1,5 +1,29 @@
 import nodemailer from "nodemailer";
 
+// Create transporter ONCE at module level
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // Use TLS
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+// CRITICAL: Verify email configuration on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Email transporter verification failed:", error);
+    console.error("Check your EMAIL_USER and EMAIL_PASS environment variables");
+  } else {
+    console.log("✅ Email service is ready to send emails");
+  }
+});
+
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -11,14 +35,6 @@ const sendOTPEmail = async (
   type = "verification"
 ) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     let subject, greeting, message;
 
     if (type === "verification") {
@@ -97,14 +113,22 @@ const sendOTPEmail = async (
       console.log("===========================================");
     }
 
+    // Log success in production (without OTP)
+    console.log(`✅ ${type} email sent successfully to ${email}`);
+
     return {
       success: true,
       messageId: info.messageId,
       otp: process.env.NODE_ENV === "development" ? otp : undefined,
     };
   } catch (error) {
-    console.error(`Failed to send ${type} email:`, error);
-    throw new Error(`Failed to send ${type} email`);
+    console.error(`❌ Failed to send ${type} email:`, {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      recipient: email,
+    });
+    throw new Error(`Failed to send ${type} email: ${error.message}`);
   }
 };
 
