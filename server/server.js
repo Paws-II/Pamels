@@ -7,6 +7,8 @@ import cors from "cors";
 import db from "./connection/conn.js";
 import passport from "./config/passport.js";
 import session from "express-session";
+import { createServer } from "http";
+import { initializeSocket } from "./socket/index.js";
 
 import ownerAuthRoutes from "./routes/ownerAuthRoutes.js";
 import shelterAuthRoutes from "./routes/shelterAuthRoutes.js";
@@ -54,7 +56,11 @@ app.get("/", (req, res) => {
 });
 
 const startServer = async () => {
-  app.listen(PORT, () => {
+  const httpServer = createServer(app);
+
+  initializeSocket(httpServer);
+
+  httpServer.listen(PORT, () => {
     console.log("Server running on port:", PORT);
   });
 };

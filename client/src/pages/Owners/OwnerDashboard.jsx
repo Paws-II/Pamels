@@ -11,7 +11,10 @@ import {
   Phone,
   User,
 } from "lucide-react";
-
+import {
+  useDashboardSocket,
+  useNotificationSocket,
+} from "../../../hooks/useSocket";
 import Navbar from "../../components/Owners/NavbarOwner";
 import FullPageLoader from "../../Common/FullPageLoader";
 import defaultAvatar from "../../assets/Owner/default-owner.png";
@@ -23,6 +26,54 @@ const OwnerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("profile");
+  const { subscribeToDashboard, unsubscribeFromDashboard, onDashboardUpdate } =
+    useDashboardSocket();
+
+  const { onNewNotification } = useNotificationSocket();
+
+  // useEffect(() => {
+  //   subscribeToDashboard();
+
+  //   const cleanupDashboard = onDashboardUpdate((update) => {
+  //     console.log("Dashboard update received:", update);
+
+  //     // Handle different update types
+  //     switch (update.type) {
+  //       case "stats":
+  //         // Update stats in real-time
+  //         if (update.data.stats) {
+  //           setStats((prev) => ({ ...prev, ...update.data.stats }));
+  //         }
+  //         break;
+  //       case "pet":
+  //         // Refresh pets list
+  //         fetchAllData();
+  //         break;
+  //       case "application":
+  //         // Refresh applications
+  //         fetchAllData();
+  //         break;
+  //       default:
+  //         console.log("Unknown update type:", update.type);
+  //     }
+  //   });
+
+  //   const cleanupNotification = onNewNotification((notification) => {
+  //     console.log("New notification:", notification);
+  //     // You can show a toast or update a notification badge here
+  //   });
+
+  //   return () => {
+  //     unsubscribeFromDashboard();
+  //     cleanupDashboard();
+  //     cleanupNotification();
+  //   };
+  // }, [
+  //   subscribeToDashboard,
+  //   unsubscribeFromDashboard,
+  //   onDashboardUpdate,
+  //   onNewNotification,
+  // ]);
 
   useEffect(() => {
     fetchProfile();
