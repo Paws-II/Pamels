@@ -13,6 +13,7 @@ import OwnerDashboard from "./pages/Owners/OwnerDashboard.jsx";
 import ShelterDashboard from "./pages/Shelters/ShelterDashboard.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import Signup from "./pages/auth/Signup.jsx";
+import OwnerUpdateProfile from "./pages/Owners/OwnerUpdateProfile.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -27,6 +28,11 @@ createRoot(document.getElementById("root")).render(
           <Route path="/shelter-dashboard" element={<ShelterDashboard />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<Signup />} />
+
+          <Route
+            path="/owner-update-profile"
+            element={<OwnerUpdateProfile />}
+          />
         </Routes>
       </BrowserRouter>
     </SocketProvider>

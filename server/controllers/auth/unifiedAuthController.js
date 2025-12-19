@@ -1,14 +1,14 @@
 import passport from "passport";
 import bcrypt from "bcryptjs";
 
-import CheckLogin from "../models/loginSystem/CheckLogin.js";
-import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
+import CheckLogin from "../../models/loginSystem/CheckLogin.js";
+import OwnerLogin from "../../models/loginSystem/OwnerLogin.js";
+import ShelterLogin from "../../models/loginSystem/ShelterLogin.js";
 import {
   generateToken,
   setTokenCookie,
   clearTokenCookie,
-} from "../config/jwtConfig.js";
+} from "../../config/jwtConfig.js";
 
 const unifiedAuthController = {
   login: async (req, res) => {

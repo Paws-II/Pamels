@@ -1,14 +1,14 @@
 import bcrypt from "bcryptjs";
-import CheckLogin from "../models/loginSystem/CheckLogin.js";
-import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import OwnerProfile from "../models/profiles/OwnerProfile.js";
+import CheckLogin from "../../models/loginSystem/CheckLogin.js";
+import OwnerLogin from "../../models/loginSystem/OwnerLogin.js";
+import OwnerProfile from "../../models/profiles/OwnerProfile.js";
 
-import { generateOTP, sendOTPEmail } from "../config/emailService.js";
+import { generateOTP, sendOTPEmail } from "../../config/emailService.js";
 import {
   generateToken,
   setTokenCookie,
   clearTokenCookie,
-} from "../config/jwtConfig.js";
+} from "../../config/jwtConfig.js";
 
 const ownerAuthController = {
   checkEmail: async (req, res) => {

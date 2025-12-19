@@ -1,14 +1,14 @@
 import bcrypt from "bcryptjs";
-import CheckLogin from "../models/loginSystem/CheckLogin.js";
-import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
-import ShelterProfile from "../models/profiles/ShelterProfile.js";
+import CheckLogin from "../../models/loginSystem/CheckLogin.js";
+import ShelterLogin from "../../models/loginSystem/ShelterLogin.js";
+import ShelterProfile from "../../models/profiles/ShelterProfile.js";
 
-import { generateOTP, sendOTPEmail } from "../config/emailService.js";
+import { generateOTP, sendOTPEmail } from "../../config/emailService.js";
 import {
   generateToken,
   setTokenCookie,
   clearTokenCookie,
-} from "../config/jwtConfig.js";
+} from "../../config/jwtConfig.js";
 
 const shelterAuthController = {
   checkEmail: async (req, res) => {

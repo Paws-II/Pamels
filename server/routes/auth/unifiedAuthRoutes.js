@@ -1,6 +1,6 @@
 import express from "express";
-import unifiedAuthController from "../controllers/unifiedAuthController.js";
-import { authenticateJWT } from "../middlewares/authMiddleware.js";
+import unifiedAuthController from "../../controllers/auth/unifiedAuthController.js";
+import { authenticateJWT } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

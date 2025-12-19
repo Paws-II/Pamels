@@ -91,7 +91,8 @@ const Navbar = ({ onLogout }) => {
       title: "Preferences",
       links: [
         {
-          path: "/owner-settings",
+          path: "/owner-update-profile",
+
           icon: Settings,
           label: "Settings",
         },

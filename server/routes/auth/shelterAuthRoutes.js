@@ -1,9 +1,9 @@
 import express from "express";
-import shelterAuthController from "../controllers/shelterAuthController.js";
+import shelterAuthController from "../../controllers/auth/shelterAuthController.js";
 import {
   authenticateJWT,
   authorizeRole,
-} from "../middlewares/authMiddleware.js";
+} from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

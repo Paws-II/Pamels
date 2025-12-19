@@ -51,6 +51,19 @@ const ownerLoginSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    passwordChanged: {
+      type: Boolean,
+      default: false,
+    },
+    securityOTP: {
+      type: String,
+      default: null,
+    },
+    securityOTPExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -10,10 +10,12 @@ import session from "express-session";
 import { createServer } from "http";
 import { initializeSocket } from "./socket/index.js";
 
-import ownerAuthRoutes from "./routes/ownerAuthRoutes.js";
-import shelterAuthRoutes from "./routes/shelterAuthRoutes.js";
-import unifiedAuthRoutes from "./routes/unifiedAuthRoutes.js";
-import forgotPasswordRoutes from "./routes/forgotPasswordRoutes.js";
+import ownerAuthRoutes from "./routes/auth/ownerAuthRoutes.js";
+import shelterAuthRoutes from "./routes/auth/shelterAuthRoutes.js";
+import unifiedAuthRoutes from "./routes/auth/unifiedAuthRoutes.js";
+import forgotPasswordRoutes from "./routes/auth/forgotPasswordRoutes.js";
+import ownerProfileRoutes from "./routes/owner/ownerProfile.js";
+import ownerSecurityRoutes from "./routes/owner/ownerSecurity.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -50,6 +52,8 @@ app.use("/api/auth/owner", ownerAuthRoutes);
 app.use("/api/auth/shelter", shelterAuthRoutes);
 app.use("/api/auth", unifiedAuthRoutes);
 app.use("/api/auth/forgot-password", forgotPasswordRoutes);
+app.use("/api/owner/profile", ownerProfileRoutes);
+app.use("/api/owner/security", ownerSecurityRoutes);
 
 app.get("/", (req, res) => {
   res.send({ message: "WhisperTails API is working" });

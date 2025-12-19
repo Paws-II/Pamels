@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import CheckLogin from "../models/loginSystem/CheckLogin.js";
-import OwnerLogin from "../models/loginSystem/OwnerLogin.js";
-import ShelterLogin from "../models/loginSystem/ShelterLogin.js";
-import { generateOTP, sendOTPEmail } from "../config/emailService.js";
+import CheckLogin from "../../models/loginSystem/CheckLogin.js";
+import OwnerLogin from "../../models/loginSystem/OwnerLogin.js";
+import ShelterLogin from "../../models/loginSystem/ShelterLogin.js";
+import { generateOTP, sendOTPEmail } from "../../config/emailService.js";
 
 const forgotPasswordController = {
   requestOTP: async (req, res) => {

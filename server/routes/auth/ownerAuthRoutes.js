@@ -1,9 +1,9 @@
 import express from "express";
-import ownerAuthController from "../controllers/ownerAuthController.js";
+import ownerAuthController from "../../controllers/auth/ownerAuthController.js";
 import {
   authenticateJWT,
   authorizeRole,
-} from "../middlewares/authMiddleware.js";
+} from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
