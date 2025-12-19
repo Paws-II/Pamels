@@ -40,7 +40,6 @@ const ShelterUpdateProfile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [activeTab, setActiveTab] = useState("personal");
 
-  // Security State
   const [securityForm, setSecurityForm] = useState({
     otp: "",
     newPassword: "",
@@ -649,7 +648,7 @@ const ShelterUpdateProfile = () => {
             <div className="space-y-6">
               {/* Google Login Warning */}
               {profileMode === "google" && !passwordChanged && tempPassword && (
-                <div className="rounded-xl border border-red-500/30 bg-gradient-to-r from-red-500/15 via-red-500/10 to-transparent p-6">
+                <div className="rounded-xl border border-red-500/30 bg-linear-to-r from-red-500/15 via-red-500/10 to-transparent p-6">
                   <div className="flex gap-4">
                     <AlertCircle
                       size={24}

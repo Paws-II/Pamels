@@ -21,6 +21,7 @@ import NavbarShelter from "../../components/Shelters/NavbarShelter";
 import FullPageLoader from "../../Common/FullPageLoader";
 import FullPageError from "../../Common/FullPageError";
 import defaultAvatar from "../../assets/Shelter/default-shelter.png";
+import NotificationBell from "../../Common/NotificationBell";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -138,10 +139,15 @@ const ShelterDashboard = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
           {/* Welcome Section */}
+          <div className="mb-4 flex justify-end">
+            <NotificationBell />
+          </div>
+
+          {/* Welcome Section - Remove NotificationBell from here */}
           <div className="mb-8">
             <div className="group relative overflow-hidden rounded-2xl bg-[#4a5568] p-8 md:p-10 shadow-2xl shadow-[#4a5568]/20 transition-shadow hover:shadow-[#4a5568]/30">
               <div className="relative z-10 flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <h1 className="mb-3 text-3xl font-bold text-white md:text-4xl lg:text-5xl tracking-tight leading-tight">
                     Welcome back, {shelterData.name}! 🏠
                   </h1>
@@ -149,7 +155,9 @@ const ShelterDashboard = () => {
                     Managing care and finding homes for our furry friends
                   </p>
                 </div>
-                <div className="hidden md:block">
+
+                {/* Desktop: Avatar Only */}
+                <div className="hidden md:flex items-center">
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
                     <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[#31323e] bg-[#4a5568]">

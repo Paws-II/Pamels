@@ -63,6 +63,7 @@ const ownerProfileController = {
       }
 
       // Create notification
+
       const notification = new Notification({
         userId: req.userId,
         userModel: "OwnerLogin",

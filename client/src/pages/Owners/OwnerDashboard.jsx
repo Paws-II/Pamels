@@ -16,6 +16,7 @@ import {
 import Navbar from "../../components/Owners/NavbarOwner";
 import FullPageLoader from "../../Common/FullPageLoader";
 import defaultAvatar from "../../assets/Owner/default-owner.png";
+import NotificationBell from "../../Common/NotificationBell";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -98,6 +99,9 @@ const OwnerDashboard = () => {
 
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
+          <div className="mb-4 flex justify-end">
+            <NotificationBell />
+          </div>
           <div className="mb-8">
             <div className="group relative overflow-hidden rounded-2xl bg-linear-to-br from-[#60519b] via-[#7d6ab8] to-[#60519b] p-8 md:p-10 shadow-2xl shadow-[#60519b]/20 transition-shadow hover:shadow-[#60519b]/40">
               <div className="absolute inset-0 animate-pulse bg-linear-to-r from-transparent via-white/5 to-transparent" />
@@ -140,10 +144,6 @@ const OwnerDashboard = () => {
                     <h2 className="text-2xl font-bold text-white tracking-tight">
                       Owner Control Center
                     </h2>
-                    <button className="relative rounded-lg p-2 transition-colors hover:bg-[#60519b]/20">
-                      <Bell size={20} className="text-[#bfc0d1]" />
-                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-                    </button>
                   </div>
 
                   <div className="flex flex-col gap-8 lg:flex-row items-start">
