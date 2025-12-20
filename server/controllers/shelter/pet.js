@@ -39,8 +39,14 @@ const petController = {
         medicalNotes,
         temperament,
         trained,
+        spayedNeutered,
+        houseTrained,
         specialNeeds,
+        specialNeedsDescription,
         adoptionFee,
+        donation,
+        maintenanceCost,
+        totalAdoptionCost,
         description,
       } = req.body;
 
@@ -60,6 +66,14 @@ const petController = {
         imageUrls = uploadResults.map((result) => result.secure_url);
       }
 
+      let coverImageUrl = "";
+      if (req.files && req.files.length > 0 && req.body.coverImageIndex) {
+        const coverIndex = parseInt(req.body.coverImageIndex);
+        if (coverIndex >= 0 && coverIndex < imageUrls.length) {
+          coverImageUrl = imageUrls[coverIndex];
+        }
+      }
+
       const parsedTemperament = temperament ? JSON.parse(temperament) : [];
 
       const newPet = new PetProfile({
@@ -74,14 +88,21 @@ const petController = {
         size: size || "medium",
         color: color || "",
         images: imageUrls,
+        coverImage: coverImageUrl,
         vaccinated: vaccinated === "true" || vaccinated === true,
-        neutered: neutered === "true" || neutered === true,
+        spayedNeutered: spayedNeutered === "true" || spayedNeutered === true,
+        houseTrained: houseTrained === "true" || houseTrained === true,
         medicalNotes: medicalNotes || "",
         temperament: parsedTemperament,
-        trained: trained === "true" || trained === true,
         specialNeeds: specialNeeds === "true" || specialNeeds === true,
+        specialNeedsDescription: specialNeedsDescription || "",
         adoptionStatus: "available",
         adoptionFee: adoptionFee ? parseFloat(adoptionFee) : 0,
+        donation: donation ? parseFloat(donation) : 0,
+        maintenanceCost: maintenanceCost ? parseFloat(maintenanceCost) : 0,
+        totalAdoptionCost: totalAdoptionCost
+          ? parseFloat(totalAdoptionCost)
+          : 0,
         description: description || "",
         isActive: true,
       });
@@ -144,6 +165,7 @@ const petController = {
 
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const totalPets = await PetProfile.countDocuments(query);
+
       const pets = await PetProfile.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -230,16 +252,20 @@ const petController = {
         size,
         color,
         vaccinated,
-        neutered,
         medicalNotes,
         temperament,
-        trained,
+        spayedNeutered,
+        houseTrained,
         specialNeeds,
+        specialNeedsDescription,
         adoptionFee,
+        donation,
+        maintenanceCost,
+        totalAdoptionCost,
         description,
         existingImages,
+        coverImageIndex,
       } = req.body;
-
       let imageUrls = existingImages ? JSON.parse(existingImages) : [];
 
       if (req.files && req.files.length > 0) {
@@ -249,6 +275,14 @@ const petController = {
         const uploadResults = await Promise.all(uploadPromises);
         const newImages = uploadResults.map((result) => result.secure_url);
         imageUrls = [...imageUrls, ...newImages];
+      }
+
+      let coverImageUrl = pet.coverImage;
+      if (coverImageIndex !== undefined) {
+        const coverIndex = parseInt(coverImageIndex);
+        if (coverIndex >= 0 && coverIndex < imageUrls.length) {
+          coverImageUrl = imageUrls[coverIndex];
+        }
       }
 
       const parsedTemperament = temperament ? JSON.parse(temperament) : [];
@@ -263,13 +297,23 @@ const petController = {
       pet.size = size || pet.size;
       pet.color = color || pet.color;
       pet.images = imageUrls;
+      pet.coverImage = coverImageUrl;
       pet.vaccinated = vaccinated === "true" || vaccinated === true;
-      pet.neutered = neutered === "true" || neutered === true;
+      pet.spayedNeutered = spayedNeutered === "true" || spayedNeutered === true;
+      pet.houseTrained = houseTrained === "true" || houseTrained === true;
       pet.medicalNotes = medicalNotes || pet.medicalNotes;
       pet.temperament = parsedTemperament;
-      pet.trained = trained === "true" || trained === true;
       pet.specialNeeds = specialNeeds === "true" || specialNeeds === true;
+      pet.specialNeedsDescription =
+        specialNeedsDescription || pet.specialNeedsDescription;
       pet.adoptionFee = adoptionFee ? parseFloat(adoptionFee) : pet.adoptionFee;
+      pet.donation = donation ? parseFloat(donation) : pet.donation;
+      pet.maintenanceCost = maintenanceCost
+        ? parseFloat(maintenanceCost)
+        : pet.maintenanceCost;
+      pet.totalAdoptionCost = totalAdoptionCost
+        ? parseFloat(totalAdoptionCost)
+        : pet.totalAdoptionCost;
       pet.description = description || pet.description;
 
       await pet.save();

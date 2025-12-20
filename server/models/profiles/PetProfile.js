@@ -77,25 +77,29 @@ const petProfileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
-    neutered: {
-      type: Boolean,
-      default: false,
-    },
-
     medicalNotes: {
       type: String,
       default: "",
     },
-
     temperament: {
       type: [String],
       default: [],
     },
-
-    trained: {
+    spayedNeutered: {
       type: Boolean,
       default: false,
+    },
+    houseTrained: {
+      type: Boolean,
+      default: false,
+    },
+    specialNeeds: {
+      type: Boolean,
+      default: false,
+    },
+    specialNeedsDescription: {
+      type: String,
+      default: "",
     },
 
     specialNeeds: {
@@ -114,6 +118,25 @@ const petProfileSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    donation: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maintenanceCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalAdoptionCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    coverImage: {
+      type: String,
+      default: "",
     },
 
     description: {
