@@ -110,6 +110,8 @@ const petController = {
           type: "general",
           title: "Pet Added Successfully",
           message: `${name} has been added to your shelter`,
+          read: false,
+          createdAt: new Date(),
         });
       }
 
@@ -133,20 +135,31 @@ const petController = {
   getShelterPets: async (req, res) => {
     try {
       const shelterId = req.userId;
-      const { status, limit = 10 } = req.query;
+      const { status, page = 1, limit = 6 } = req.query;
 
       const query = { shelterId, isActive: true };
       if (status) {
         query.adoptionStatus = status;
       }
 
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const totalPets = await PetProfile.countDocuments(query);
       const pets = await PetProfile.find(query)
         .sort({ createdAt: -1 })
+        .skip(skip)
         .limit(parseInt(limit));
 
       return res.json({
         success: true,
-        data: pets,
+        data: {
+          pets,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalPets / parseInt(limit)),
+            totalPets,
+            limit: parseInt(limit),
+          },
+        },
       });
     } catch (error) {
       console.error("Get shelter pets error:", error);
@@ -184,6 +197,182 @@ const petController = {
       return res.status(500).json({
         success: false,
         message: "Failed to fetch pet details",
+      });
+    }
+  },
+
+  updatePet: async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const shelterId = req.userId;
+
+      const pet = await PetProfile.findOne({
+        _id: petId,
+        shelterId,
+        isActive: true,
+      });
+
+      if (!pet) {
+        return res.status(404).json({
+          success: false,
+          message: "Pet not found or unauthorized",
+        });
+      }
+
+      const {
+        name,
+        species,
+        breed,
+        gender,
+        dateOfBirth,
+        age,
+        ageUnit,
+        size,
+        color,
+        vaccinated,
+        neutered,
+        medicalNotes,
+        temperament,
+        trained,
+        specialNeeds,
+        adoptionFee,
+        description,
+        existingImages,
+      } = req.body;
+
+      let imageUrls = existingImages ? JSON.parse(existingImages) : [];
+
+      if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map((file) =>
+          uploadToCloudinary(file.buffer, "pets")
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+        const newImages = uploadResults.map((result) => result.secure_url);
+        imageUrls = [...imageUrls, ...newImages];
+      }
+
+      const parsedTemperament = temperament ? JSON.parse(temperament) : [];
+
+      pet.name = name || pet.name;
+      pet.species = species || pet.species;
+      pet.breed = breed || pet.breed;
+      pet.gender = gender || pet.gender;
+      pet.dateOfBirth = dateOfBirth || pet.dateOfBirth;
+      pet.age = age ? parseInt(age) : pet.age;
+      pet.ageUnit = ageUnit || pet.ageUnit;
+      pet.size = size || pet.size;
+      pet.color = color || pet.color;
+      pet.images = imageUrls;
+      pet.vaccinated = vaccinated === "true" || vaccinated === true;
+      pet.neutered = neutered === "true" || neutered === true;
+      pet.medicalNotes = medicalNotes || pet.medicalNotes;
+      pet.temperament = parsedTemperament;
+      pet.trained = trained === "true" || trained === true;
+      pet.specialNeeds = specialNeeds === "true" || specialNeeds === true;
+      pet.adoptionFee = adoptionFee ? parseFloat(adoptionFee) : pet.adoptionFee;
+      pet.description = description || pet.description;
+
+      await pet.save();
+
+      await Notification.create({
+        userId: shelterId,
+        userModel: "ShelterLogin",
+        type: "general",
+        title: "Pet Updated Successfully",
+        message: `${pet.name} has been updated`,
+        metadata: { petId: pet._id },
+      });
+
+      if (req.app.locals.io) {
+        broadcastDashboardUpdate(req.app.locals.io, shelterId, "pet:updated", {
+          pet,
+        });
+
+        req.app.locals.io.to(`user:${shelterId}`).emit("notification:new", {
+          type: "general",
+          title: "Pet Updated Successfully",
+          message: `${pet.name} has been updated`,
+          read: false,
+          createdAt: new Date(),
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Pet updated successfully",
+        data: pet,
+      });
+    } catch (error) {
+      console.error("Update pet error:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Failed to update pet",
+      });
+    }
+  },
+
+  deletePet: async (req, res) => {
+    try {
+      const { petId } = req.params;
+      const shelterId = req.userId;
+
+      const pet = await PetProfile.findOne({
+        _id: petId,
+        shelterId,
+        isActive: true,
+      });
+
+      if (!pet) {
+        return res.status(404).json({
+          success: false,
+          message: "Pet not found or unauthorized",
+        });
+      }
+
+      const petName = pet.name;
+
+      pet.isActive = false;
+      await pet.save();
+
+      const shelter = await ShelterProfile.findOne({ shelterId });
+      if (shelter && shelter.currentPets > 0) {
+        shelter.currentPets -= 1;
+        await shelter.save();
+      }
+
+      await Notification.create({
+        userId: shelterId,
+        userModel: "ShelterLogin",
+        type: "general",
+        title: "Pet Removed",
+        message: `${petName} has been removed`,
+        metadata: { petId: pet._id },
+      });
+
+      if (req.app.locals.io) {
+        broadcastDashboardUpdate(req.app.locals.io, shelterId, "pet:deleted", {
+          petId: pet._id,
+          currentPets: shelter?.currentPets || 0,
+        });
+
+        req.app.locals.io.to(`user:${shelterId}`).emit("notification:new", {
+          type: "general",
+          title: "Pet Removed",
+          message: `${petName} has been removed`,
+          read: false,
+          createdAt: new Date(),
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Pet deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete pet error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete pet",
       });
     }
   },

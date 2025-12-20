@@ -30,4 +30,19 @@ router.get(
   petController.getPetById
 );
 
+router.put(
+  "/:petId",
+  authenticateJWT,
+  authorizeRole("shelter"),
+  upload.array("images", 5),
+  petController.updatePet
+);
+
+router.delete(
+  "/:petId",
+  authenticateJWT,
+  authorizeRole("shelter"),
+  petController.deletePet
+);
+
 export default router;

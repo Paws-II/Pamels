@@ -1,30 +1,38 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import {
   Heart,
   Upload,
   X,
   Loader2,
-  ArrowLeft,
-  AlertCircle,
-  CheckCircle2,
   PawPrint,
   Stethoscope,
   Activity,
   FileText,
+  ArrowLeft,
+  Save,
 } from "lucide-react";
 import NavbarShelter from "../../components/Shelters/NavbarShelter";
 import ShelterToast from "../../Common/ShelterToast";
+import FullPageLoader from "../../Common/FullPageLoader";
+import NotificationBell from "../../Common/NotificationBell";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const ShelterPetAdd = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editPetId = searchParams.get("edit");
+  const isEditMode = !!editPetId;
+
   const [loading, setLoading] = useState(false);
+  const [fetchingPet, setFetchingPet] = useState(false);
   const [toast, setToast] = useState(null);
+
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -58,6 +66,55 @@ const ShelterPetAdd = () => {
     "Curious",
   ];
 
+  useEffect(() => {
+    if (isEditMode) {
+      fetchPetForEdit();
+    }
+  }, [editPetId]);
+
+  const fetchPetForEdit = async () => {
+    setFetchingPet(true);
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/shelter/pets/${editPetId}`,
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        const pet = response.data.data;
+
+        setFormData({
+          name: pet.name || "",
+          species: pet.species || "",
+          breed: pet.breed || "",
+          gender: pet.gender || "unknown",
+          age: pet.age || "",
+          ageUnit: pet.ageUnit || "years",
+          size: pet.size || "medium",
+          color: pet.color || "",
+          vaccinated: pet.vaccinated || false,
+          neutered: pet.neutered || false,
+          trained: pet.trained || false,
+          specialNeeds: pet.specialNeeds || false,
+          medicalNotes: pet.medicalNotes || "",
+          temperament: pet.temperament || [],
+          adoptionFee: pet.adoptionFee || "",
+          description: pet.description || "",
+        });
+
+        setExistingImages(pet.images || []);
+      }
+    } catch (err) {
+      setToast({
+        type: "error",
+        title: "Error",
+        message: "Failed to load pet details",
+      });
+    } finally {
+      setFetchingPet(false);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -77,7 +134,8 @@ const ShelterPetAdd = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (images.length + files.length > 5) {
+
+    if (images.length + files.length + existingImages.length > 5) {
       setToast({
         type: "error",
         title: "Too Many Images",
@@ -102,58 +160,36 @@ const ShelterPetAdd = () => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      return "Pet name is required";
-    }
-
-    if (!formData.species.trim()) {
-      return "Species is required";
-    }
-
-    if (!formData.age || Number(formData.age) <= 0) {
+    if (!formData.name.trim()) return "Pet name is required";
+    if (!formData.species.trim()) return "Species is required";
+    if (!formData.age || Number(formData.age) <= 0)
       return "Please enter a valid age";
-    }
-
-    if (!formData.gender) {
-      return "Please select gender";
-    }
-
-    if (!formData.size) {
-      return "Please select pet size";
-    }
-
-    if (formData.temperament.length === 0) {
+    if (formData.temperament.length === 0)
       return "Please select at least one temperament trait";
-    }
-
-    if (formData.specialNeeds && !formData.medicalNotes.trim()) {
+    if (formData.specialNeeds && !formData.medicalNotes.trim())
       return "Medical notes are required for special needs pets";
-    }
-
-    if (!formData.description.trim()) {
-      return "Pet description is required";
-    }
-
-    if (images.length === 0) {
+    if (!formData.description.trim()) return "Pet description is required";
+    if (images.length === 0 && existingImages.length === 0)
       return "Please upload at least one pet image";
-    }
-
-    if (Number(formData.adoptionFee) < 0) {
+    if (Number(formData.adoptionFee) < 0)
       return "Adoption fee cannot be negative";
-    }
-
     return null;
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationError = validateForm();
-    if (validationError) {
+    const error = validateForm();
+    if (error) {
       setToast({
         type: "error",
         title: "Form Incomplete",
-        message: validationError,
+        message: error,
       });
       return;
     }
@@ -171,61 +207,82 @@ const ShelterPetAdd = () => {
         }
       });
 
-      images.forEach((image) => {
-        submitData.append("images", image);
-      });
+      images.forEach((img) => submitData.append("images", img));
 
-      const response = await axios.post(
-        `${API_URL}/api/shelter/pets`,
-        submitData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
-        }
-      );
+      if (isEditMode) {
+        submitData.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      const url = isEditMode
+        ? `${API_URL}/api/shelter/pets/${editPetId}`
+        : `${API_URL}/api/shelter/pets`;
+
+      const method = isEditMode ? "put" : "post";
+
+      const response = await axios[method](url, submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         setToast({
           type: "success",
-          title: "Pet Added Successfully",
-          message: `${formData.name} has been added to your shelter`,
+          title: isEditMode
+            ? "Pet Updated Successfully"
+            : "Pet Added Successfully",
+          message: `${formData.name} has been ${
+            isEditMode ? "updated" : "added"
+          } successfully`,
         });
 
         setTimeout(() => {
-          navigate("/shelter-dashboard");
+          navigate(isEditMode ? "/my-pets" : "/shelter-dashboard");
         }, 2000);
       }
-    } catch (error) {
-      console.error("Add pet error:", error);
+    } catch (err) {
       setToast({
         type: "error",
-        title: "Failed to Add Pet",
+        title: "Error",
         message:
-          error.response?.data?.message ||
-          "An error occurred. Please try again.",
+          err.response?.data?.message ||
+          `Failed to ${isEditMode ? "update" : "add"} pet`,
       });
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchingPet) {
+    return (
+      <FullPageLoader
+        title="Loading Pet Details…"
+        subtitle="Preparing form for editing"
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#1e202c] flex">
       <NavbarShelter />
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl p-4 md:p-6 lg:p-8">
-          <div className="mb-8">
-            <div className="flex items-center gap-4">
-              <div className="rounded-2xl bg-[#4a5568] p-4">
-                <Heart size={32} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Add New Pet</h1>
-                <p className="mt-1 text-[#bfc0d1]/80">
-                  Create a profile for a new pet available for adoption
-                </p>
-              </div>
+          {isEditMode && (
+            <div className="mb-6 flex items-center justify-between">
+              <button
+                onClick={() => navigate("/my-pets")}
+                className="flex items-center gap-2 text-[#bfc0d1] hover:text-white"
+              >
+                <ArrowLeft size={20} />
+                Back to My Pets
+              </button>
+              <NotificationBell />
             </div>
+          )}
+
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white">
+              {isEditMode ? "Edit Pet Profile" : "Add New Pet"}
+            </h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

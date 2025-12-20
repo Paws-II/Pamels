@@ -16,6 +16,8 @@ import Signup from "./pages/auth/Signup.jsx";
 import OwnerUpdateProfile from "./pages/Owners/OwnerUpdateProfile.jsx";
 import ShelterUpdateProfile from "./pages/Shelters/ShelterUpdateProfile.jsx";
 import ShelterPetAdd from "./pages/Shelters/ShelterPetAdd.jsx";
+import ShelterPetView from "./pages/Shelters/ShelterPetView.jsx";
+import PetDetailsPage from "./pages/Shelters/PetDetailsPage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -42,6 +44,8 @@ createRoot(document.getElementById("root")).render(
           />
 
           <Route path="/add-pet" element={<ShelterPetAdd />} />
+          <Route path="/my-pets" element={<ShelterPetView />} />
+          <Route path="/shelter/pets/:petId" element={<PetDetailsPage />} />
         </Routes>
       </BrowserRouter>
     </SocketProvider>
