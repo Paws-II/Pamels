@@ -3,6 +3,7 @@ import socketAuth from "./auth.js";
 import { setupDashboardHandlers } from "./handlers/dashboardHandler.js";
 import { setupNotificationHandlers } from "./handlers/notificationHandler.js";
 import { setupStatusHandlers } from "./handlers/statusHandler.js";
+import { setupChatHandlers } from "./handlers/chatHandler.js";
 
 export const initializeSocket = (httpServer) => {
   const io = new Server(httpServer, {
@@ -34,6 +35,7 @@ export const initializeSocket = (httpServer) => {
     setupDashboardHandlers(io, socket);
     setupNotificationHandlers(io, socket);
     setupStatusHandlers(io, socket);
+    setupChatHandlers(io, socket);
 
     socket.on("disconnect", (reason) => {
       console.log(`✗ Socket disconnected: ${socket.id} | Reason: ${reason}`);
