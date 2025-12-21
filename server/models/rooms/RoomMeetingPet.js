@@ -26,10 +26,15 @@ const roomMeetingPetSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    status: {
+      type: String,
+      enum: ["open", "ongoing", "closed", "blocked"],
+      default: "open",
+      index: true,
+    },
   },
   { timestamps: true }
 );
 
 roomMeetingPetSchema.index({ applicationId: 1 }, { unique: true });
-
 export default mongoose.model("RoomMeetingPet", roomMeetingPetSchema);
