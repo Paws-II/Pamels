@@ -62,7 +62,7 @@ const Navbar = ({ onLogout }) => {
       title: "Community & Help",
       links: [
         {
-          path: "/shelter-chats",
+          path: "/owner-chat",
           icon: MessageSquare,
           label: "Shelter Chats",
         },
@@ -82,7 +82,7 @@ const Navbar = ({ onLogout }) => {
       title: "Management",
       links: [
         {
-          path: "/my-meetings",
+          path: "/owner-meetings",
           icon: Calendar,
           label: "My Meetings",
         },

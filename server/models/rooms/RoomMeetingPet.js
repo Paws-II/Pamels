@@ -14,6 +14,7 @@ const roomMeetingPetSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     petId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PetProfile",
@@ -26,15 +27,74 @@ const roomMeetingPetSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     status: {
       type: String,
-      enum: ["open", "ongoing", "closed", "blocked"],
+      enum: ["open", "scheduled", "completed"],
       default: "open",
       index: true,
+    },
+
+    scheduledAt: {
+      type: Date,
+      default: null,
+    },
+
+    durationMinutes: {
+      type: Number,
+      default: 30,
+    },
+
+    meetingLink: {
+      type: String,
+      default: null,
+    },
+
+    meetingPlatform: {
+      type: String,
+      enum: ["google-meet", "zoom", "teams", "other"],
+      default: "google-meet",
+    },
+
+    ownerJoined: {
+      type: Boolean,
+      default: false,
+    },
+
+    shelterJoined: {
+      type: Boolean,
+      default: false,
+    },
+
+    ownerJoinedAt: {
+      type: Date,
+      default: null,
+    },
+
+    shelterJoinedAt: {
+      type: Date,
+      default: null,
+    },
+
+    notes: {
+      type: String,
+      default: "",
+    },
+
+    cancelledBy: {
+      type: String,
+      enum: ["owner", "shelter", null],
+      default: null,
+    },
+
+    cancellationReason: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }
 );
 
 roomMeetingPetSchema.index({ applicationId: 1 }, { unique: true });
+
 export default mongoose.model("RoomMeetingPet", roomMeetingPetSchema);

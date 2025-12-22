@@ -301,6 +301,31 @@ const applicationManagementController = {
         { session }
       );
 
+      const chatRoom = await RoomChatPet.findOne({
+        petId: application.petId,
+        ownerId: application.ownerId,
+        shelterId: application.shelterId,
+      }).session(session);
+
+      if (chatRoom) {
+        const RoomChatMessage = (
+          await import("../../models/rooms/RoomChatMessage.js")
+        ).default;
+
+        await RoomChatMessage.create(
+          [
+            {
+              roomId: chatRoom._id,
+              senderId: shelterId,
+              senderModel: "ShelterLogin",
+              messageType: "system",
+              content: "❌ Application was rejected",
+            },
+          ],
+          { session }
+        );
+      }
+
       await session.commitTransaction();
 
       if (req.app.locals.io) {
@@ -360,7 +385,7 @@ const applicationManagementController = {
         });
       }
 
-      // Search for existing room by petId, ownerId, shelterId
+      // Check if room exists with same shelter + owner + pet
       const existingChat = await RoomChatPet.findOne({
         petId: application.petId,
         ownerId: application.ownerId,
@@ -385,6 +410,20 @@ const applicationManagementController = {
           existingChat.status = "open";
           existingChat.applicationId = application._id;
           await existingChat.save();
+
+          // Create system message for reopening
+          const RoomChatMessage = (
+            await import("../../models/rooms/RoomChatMessage.js")
+          ).default;
+
+          await RoomChatMessage.create({
+            roomId: existingChat._id,
+            senderId: shelterId,
+            senderModel: "ShelterLogin",
+            messageType: "system",
+            content: "📌 New application attempt started",
+          });
+
           chatRoom = existingChat;
           actionType = "reopened";
         } else if (existingChat.status === "open") {
@@ -394,6 +433,19 @@ const applicationManagementController = {
           ) {
             existingChat.applicationId = application._id;
             await existingChat.save();
+
+            // Create system message for new attempt
+            const RoomChatMessage = (
+              await import("../../models/rooms/RoomChatMessage.js")
+            ).default;
+
+            await RoomChatMessage.create({
+              roomId: existingChat._id,
+              senderId: shelterId,
+              senderModel: "ShelterLogin",
+              messageType: "system",
+              content: "📌 New application attempt started",
+            });
           }
           chatRoom = existingChat;
           actionType = "already_exists";

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const roomChatMessagesSchema = new mongoose.Schema(
+const roomChatMessageSchema = new mongoose.Schema(
   {
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,13 +28,14 @@ const roomChatMessagesSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    imageUrl: {
-      type: String,
-      default: null,
-    },
+    images: [
+      {
+        type: String,
+      },
+    ],
     replyTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RoomChatMessages",
+      ref: "RoomChatMessage",
       default: null,
     },
     reactions: [
@@ -49,16 +50,9 @@ const roomChatMessagesSchema = new mongoose.Schema(
         },
       },
     ],
-    deletedBy: [
+    deletedFor: [
       {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-        },
-        deletedAt: {
-          type: Date,
-          default: Date.now,
-        },
+        type: mongoose.Schema.Types.ObjectId,
       },
     ],
     deletedForEveryone: {
@@ -67,13 +61,21 @@ const roomChatMessagesSchema = new mongoose.Schema(
     },
     deliveredTo: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+        },
+        deliveredAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
     readBy: [
       {
         userId: {
           type: mongoose.Schema.Types.ObjectId,
+          required: true,
         },
         readAt: {
           type: Date,
@@ -85,7 +87,7 @@ const roomChatMessagesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-roomChatMessagesSchema.index({ roomId: 1, createdAt: -1 });
-roomChatMessagesSchema.index({ senderId: 1 });
+roomChatMessageSchema.index({ roomId: 1, createdAt: -1 });
+roomChatMessageSchema.index({ senderId: 1 });
 
-export default mongoose.model("RoomChatMessages", roomChatMessagesSchema);
+export default mongoose.model("RoomChatMessage", roomChatMessageSchema);

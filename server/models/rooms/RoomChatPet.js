@@ -31,9 +31,33 @@ const roomChatPetSchema = new mongoose.Schema(
       default: "open",
       index: true,
     },
-    lastMessageAt: {
-      type: Date,
-      default: Date.now,
+    wallpaper: {
+      type: String,
+      default: "default",
+    },
+    lastMessage: {
+      content: {
+        type: String,
+        default: "",
+      },
+      senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null,
+      },
+      timestamp: {
+        type: Date,
+        default: null,
+      },
+    },
+    unreadCount: {
+      owner: {
+        type: Number,
+        default: 0,
+      },
+      shelter: {
+        type: Number,
+        default: 0,
+      },
     },
     participantTyping: {
       userId: {
@@ -59,4 +83,9 @@ roomChatPetSchema.index(
 );
 roomChatPetSchema.index({ applicationId: 1 });
 
+roomChatPetSchema.pre("save", function () {
+  if (!this.unreadCount) {
+    this.unreadCount = { owner: 0, shelter: 0 };
+  }
+});
 export default mongoose.model("RoomChatPet", roomChatPetSchema);

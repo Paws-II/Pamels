@@ -23,6 +23,10 @@ import ShelterApplications from "./pages/Shelters/ShelterApplications.jsx";
 import ShelterApplicationDetail from "./pages/Shelters/ShelterApplicationDetail.jsx";
 import OwnerMyApplications from "./pages/Owners/OwnerMyApplications.jsx";
 import RejectedApplicationDetail from "./pages/Owners/RejectedApplicationDetail.jsx";
+import OwnerChatRoom from "./pages/Owners/OwnerChatRoom.jsx";
+import ShelterChatRoom from "./pages/Shelters/ShelterChatRoom.jsx";
+import ShelterMeetings from "./pages/Shelters/ShelterMeetings.jsx";
+import OwnerMeetings from "./pages/Owners/OwnerMeetings.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -66,6 +70,15 @@ createRoot(document.getElementById("root")).render(
             path="/applications-owner/rejected/:applicationId"
             element={<RejectedApplicationDetail />}
           />
+
+          <Route path="/owner-chat" element={<OwnerChatRoom />} />
+          <Route path="/shelter-chat" element={<ShelterChatRoom />} />
+          <Route
+            path="/schedule-meeting-shelter"
+            element={<ShelterMeetings />}
+          />
+
+          <Route path="/owner-meetings" element={<OwnerMeetings />} />
         </Routes>
       </BrowserRouter>
     </SocketProvider>

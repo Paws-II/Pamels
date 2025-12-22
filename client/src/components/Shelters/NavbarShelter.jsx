@@ -54,9 +54,13 @@ const NavbarShelter = ({ onLogout }) => {
     {
       title: "Communication",
       links: [
-        { path: "/chat-room", icon: MessageCircle, label: "Chat Room" },
         {
-          path: "/schedule-meeting",
+          path: "/shelter-chat",
+          icon: MessageCircle,
+          label: "Chat Room",
+        },
+        {
+          path: "/schedule-meeting-shelter",
           icon: CalendarCheck,
           label: "Schedule Meeting",
         },

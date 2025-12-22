@@ -23,6 +23,8 @@ import notificationRoutes from "./routes/notifications/notificationRoutes.js";
 import petRoutes from "./routes/shelter/pet.js";
 import adoptionRoutes from "./routes/owner/adoption.js";
 import applicationManagementRoutes from "./routes/shelter/applicationManagement.js";
+import chatRoutes from "./routes/chat/chatRoutes.js";
+import meetingRoutes from "./routes/shelter/meeting.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -68,6 +70,8 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/shelter/pets", petRoutes);
 app.use("/api/owner/adoption", adoptionRoutes);
 app.use("/api/shelter/applications", applicationManagementRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/shelter/meetings", meetingRoutes);
 
 app.get("/", (req, res) => {
   res.send({ message: "WhisperTails API is working" });
