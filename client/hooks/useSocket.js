@@ -4,7 +4,8 @@ export const useSocket = () => {
   const { socket, isConnected, connectionError } = useSocketContext();
   const emit = useCallback(
     (event, data) => {
-      if (!socket?.isConnected()) return;
+      if (!socket?.connected) return;
+
       socket.emit(event, data);
     },
     [socket]

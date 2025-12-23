@@ -5,13 +5,14 @@ class SocketService {
     this.socket = null;
     this.listeners = new Map();
   }
-  connect(token) {
+  connect() {
     if (this.socket?.connected) {
       console.log("Socket already connected");
       return this.socket;
     }
+
     this.socket = io(API_URL, {
-      auth: { token },
+      withCredentials: true,
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -19,9 +20,11 @@ class SocketService {
       reconnectionDelayMax: 5000,
       timeout: 20000,
     });
+
     this.setupDefaultListeners();
     return this.socket;
   }
+
   setupDefaultListeners() {
     this.socket.on("connect", () => {
       console.log("✓ Socket connected:", this.socket.id);

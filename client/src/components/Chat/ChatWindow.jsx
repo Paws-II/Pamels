@@ -41,12 +41,12 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
 
     console.log(
       "Is Owner?",
-      currentUserId?.toString() === room?.ownerId?.toString()
+      currentUserId?.toString() === room?.ownerId?._id?.toString()
     );
 
     console.log(
       "Is Shelter?",
-      currentUserId?.toString() === room?.shelterId?.toString()
+      currentUserId?.toString() === room?.shelterId?._id?.toString()
     );
 
     console.log("Socket connected:", isConnected);
@@ -63,7 +63,10 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
   useEffect(() => {
     if (!room || !isConnected) return;
 
-    emit("chat:join", { roomId: room._id });
+    emit("chat:join", {
+      roomId: room._id,
+      userId: currentUserId,
+    });
 
     const unsubMessage = on("chat:message:new", (data) => {
       console.group("📥 SOCKET MESSAGE RECEIVED");
@@ -132,8 +135,8 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
 
     const oppositeId =
       userRole === "owner"
-        ? room.shelterId.toString()
-        : room.ownerId.toString();
+        ? room.shelterId?._id?.toString()
+        : room.ownerId?._id?.toString();
 
     const unsubOnline = on("user:online", (data) => {
       if (data.userId === oppositeId && data.roomId === room._id) {
@@ -572,8 +575,7 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
           console.groupEnd();
 
           const isOwn =
-            message.senderId?.toString() === currentUserId?.toString() ||
-            message.senderId?._id?.toString() === currentUserId?.toString();
+            message.senderId?.toString?.() === currentUserId?.toString?.();
 
           const showDate =
             idx === 0 ||

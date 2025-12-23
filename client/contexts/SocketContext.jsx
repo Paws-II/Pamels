@@ -12,38 +12,32 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   useEffect(() => {
-    // Get token from cookie
-    const getTokenFromCookie = () => {
-      const cookies = document.cookie.split(";");
-      const tokenCookie = cookies.find((c) =>
-        c.trim().startsWith("access_token=")
-      );
-      return tokenCookie ? tokenCookie.split("=")[1] : null;
-    };
-    const token = getTokenFromCookie();
-    if (token) {
-      try {
-        socketService.connect(token);
-        socketService.on("connect", () => {
-          setIsConnected(true);
-          setConnectionError(null);
-        });
-        socketService.on("disconnect", () => {
-          setIsConnected(false);
-        });
-        socketService.on("connect_error", (error) => {
-          setConnectionError(error.message);
-          setIsConnected(false);
-        });
-      } catch (error) {
-        console.error("Socket connection failed:", error);
+    try {
+      socketService.connect();
+
+      socketService.on("connect", () => {
+        setIsConnected(true);
+        setConnectionError(null);
+      });
+
+      socketService.on("disconnect", () => {
+        setIsConnected(false);
+      });
+
+      socketService.on("connect_error", (error) => {
         setConnectionError(error.message);
-      }
+        setIsConnected(false);
+      });
+    } catch (error) {
+      console.error("Socket connection failed:", error);
+      setConnectionError(error.message);
     }
+
     return () => {
       socketService.disconnect();
     };
   }, []);
+
   const value = {
     socket: socketService,
     isConnected,

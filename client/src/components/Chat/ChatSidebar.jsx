@@ -20,6 +20,8 @@ const ChatSidebar = ({ onSelectRoom, selectedRoomId, userRole }) => {
       });
 
       if (response.data.success) {
+        console.log("📚 CHAT ROOMS RAW RESPONSE:", response.data.data);
+
         setRooms(response.data.data);
       }
     } catch (error) {
@@ -97,7 +99,10 @@ const ChatSidebar = ({ onSelectRoom, selectedRoomId, userRole }) => {
             return (
               <div
                 key={room._id}
-                onClick={() => onSelectRoom(room)}
+                onClick={() => {
+                  console.log("🖱️ ROOM OBJECT:", room);
+                  onSelectRoom(room);
+                }}
                 className={`p-4 border-b border-white/5 cursor-pointer transition-all ${
                   isSelected
                     ? "bg-[#60519b]/20 border-l-4 border-l-[#60519b]"
