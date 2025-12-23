@@ -3,9 +3,10 @@ import {
   User,
   Circle,
   MoreVertical,
-  Video,
-  Image as ImageIcon,
+  Ban,
   X as XIcon,
+  Image as ImageIcon,
+  Video,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -17,8 +18,7 @@ const OwnerChatHeader = ({
   isTyping,
   wallpaper,
   onWallpaperChange,
-  onBlockRoom,
-  onCloseRoom,
+  showConfirmDialog,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
@@ -61,7 +61,7 @@ const OwnerChatHeader = ({
   const oppositeProfile =
     userRole === "owner" ? room.shelterProfile : room.ownerProfile;
 
-  const handleWallpaperSelect = async (wallpaperUrl) => {
+  const handleWallpaperChange = async (wallpaperUrl) => {
     try {
       const response = await fetch(
         `${API_URL}/api/chat/rooms/${room._id}/wallpaper`,
@@ -86,6 +86,12 @@ const OwnerChatHeader = ({
   const handleCustomWallpaperUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("image/")) {
+      showConfirmDialog({
+        title: "Invalid File",
+        message: "Please select a valid image file",
+        type: "error",
+        showCancel: false,
+      });
       return;
     }
 
@@ -109,14 +115,84 @@ const OwnerChatHeader = ({
       }
     } catch (error) {
       console.error("Wallpaper upload error:", error);
+      showConfirmDialog({
+        title: "Upload Failed",
+        message: "Failed to upload wallpaper",
+        type: "error",
+        showCancel: false,
+      });
     }
+  };
+
+  const handleBlockRoom = () => {
+    showConfirmDialog({
+      title: "Block Chat",
+      message: "Are you sure you want to block this chat?",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(
+            `${API_URL}/api/chat/rooms/${room._id}/block`,
+            {
+              method: "PATCH",
+              credentials: "include",
+            }
+          );
+
+          const data = await response.json();
+          if (data.success) {
+            showConfirmDialog({
+              title: "Success",
+              message: "Chat blocked successfully",
+              type: "success",
+              showCancel: false,
+            });
+            setShowMenu(false);
+          }
+        } catch (error) {
+          console.error("Block room error:", error);
+        }
+      },
+    });
+  };
+
+  const handleCloseRoom = () => {
+    showConfirmDialog({
+      title: "Close Chat",
+      message: "Are you sure you want to close this chat?",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(
+            `${API_URL}/api/chat/rooms/${room._id}/close`,
+            {
+              method: "PATCH",
+              credentials: "include",
+            }
+          );
+
+          const data = await response.json();
+          if (data.success) {
+            showConfirmDialog({
+              title: "Success",
+              message: "Chat closed successfully",
+              type: "success",
+              showCancel: false,
+            });
+            setShowMenu(false);
+          }
+        } catch (error) {
+          console.error("Close room error:", error);
+        }
+      },
+    });
   };
 
   return (
     <div className="bg-[#31323e] border-b border-white/10 p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="h-10 w-10 rounded-full bg-[#60519b]/20 flex items-center justify-center overflow-hidden ring-2 ring-transparent hover:ring-[#60519b]/30 transition-all">
+          <div className="h-10 w-10 rounded-full bg-[#60519b]/20 flex items-center justify-center overflow-hidden ring-2 ring-transparent hover:ring-[#60519b]/50 transition-all">
             {oppositeProfile?.avatar ? (
               <img
                 src={oppositeProfile.avatar}
@@ -130,7 +206,7 @@ const OwnerChatHeader = ({
           {isOppositeOnline && (
             <Circle
               size={8}
-              className="absolute bottom-0 right-0 text-green-500 fill-green-500 ring-2 ring-[#31323e]"
+              className="absolute bottom-0 right-0 text-green-500 fill-green-500"
             />
           )}
         </div>
@@ -139,28 +215,26 @@ const OwnerChatHeader = ({
             {oppositeProfile?.name || "Unknown User"}
           </h3>
           <p className="text-xs text-white/60">
-            {isTyping ? (
-              <span className="italic">typing...</span>
-            ) : (
-              room.petId?.name || ""
-            )}
+            {isTyping ? "typing..." : room.petId?.name || ""}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Video Call Button */}
         <button
           onClick={() => {}}
-          className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:scale-110"
-          title="Start video call"
+          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          title="Video call"
         >
           <Video size={20} className="text-white" />
         </button>
 
+        {/* Wallpaper Button */}
         <div className="relative">
           <button
             onClick={() => setShowWallpaperPicker(!showWallpaperPicker)}
-            className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:scale-110"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             title="Change wallpaper"
           >
             <ImageIcon size={20} className="text-white" />
@@ -174,7 +248,7 @@ const OwnerChatHeader = ({
                 </h3>
                 <button
                   onClick={() => setShowWallpaperPicker(false)}
-                  className="p-1 rounded hover:bg-white/10 transition-all hover:scale-110"
+                  className="p-1 rounded hover:bg-white/10"
                 >
                   <XIcon size={16} className="text-white/60" />
                 </button>
@@ -185,12 +259,12 @@ const OwnerChatHeader = ({
                   <button
                     key={preset.id}
                     onClick={() =>
-                      handleWallpaperSelect(preset.url || "default")
+                      handleWallpaperChange(preset.url || "default")
                     }
                     className={`relative h-20 rounded-lg overflow-hidden border-2 transition-all ${
                       wallpaper === (preset.url || "default")
-                        ? "border-[#60519b] scale-105"
-                        : "border-white/10 hover:border-white/30 hover:scale-105"
+                        ? "border-[#60519b]"
+                        : "border-white/10 hover:border-white/30"
                     }`}
                   >
                     {preset.url ? (
@@ -222,7 +296,7 @@ const OwnerChatHeader = ({
               />
               <button
                 onClick={() => wallpaperInputRef.current?.click()}
-                className="w-full bg-[#60519b] hover:bg-[#7d6ab8] text-white text-sm py-2 rounded-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                className="w-full bg-[#60519b] hover:bg-[#7d6ab8] text-white text-sm py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <ImageIcon size={16} />
                 Upload Custom Wallpaper
@@ -231,11 +305,12 @@ const OwnerChatHeader = ({
           )}
         </div>
 
+        {/* 3-dot Menu (Shelter only) */}
         {userRole === "shelter" && (
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 hover:scale-110"
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             >
               <MoreVertical size={20} className="text-white" />
             </button>
@@ -243,33 +318,17 @@ const OwnerChatHeader = ({
             {showMenu && (
               <div className="absolute right-0 top-full mt-2 bg-[#31323e] border border-white/10 rounded-lg shadow-xl z-10 min-w-[160px]">
                 <button
-                  onClick={() => {
-                    onCloseRoom();
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                  onClick={handleCloseRoom}
+                  className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                 >
                   <XIcon size={16} />
                   Close Chat
                 </button>
                 <button
-                  onClick={() => {
-                    onBlockRoom();
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-2"
+                  onClick={handleBlockRoom}
+                  className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                  </svg>
+                  <Ban size={16} />
                   Block Chat
                 </button>
               </div>

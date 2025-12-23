@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ChatSidebar from "../../components/Chat/ChatSidebar";
-import ChatWindow from "../../components/Chat/ChatWindow";
+import ChatSidebar from "../../components/Owners/test/OwnerChatSidebar";
+import ChatWindow from "../../components/Owners/test/OwnerChatWindow";
 
 const OwnerChatRoom = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);

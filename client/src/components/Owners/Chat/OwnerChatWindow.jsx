@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MoreVertical, Trash2, X, ArrowDown } from "lucide-react";
-import { useSocket } from "../../../hooks/useSocket";
-import ConfirmationDialog from "../../../Common/ConfirmationDialog";
+import { MoreVertical, Trash2, ArrowDown, X as XIcon } from "lucide-react";
+import { useSocket } from "../../../../hooks/useSocket";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -10,18 +9,16 @@ const OwnerChatWindow = ({
   userRole,
   currentUserId,
   wallpaper,
-  onWallpaperChange,
+  showConfirmDialog,
 }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messageMenu, setMessageMenu] = useState(null);
   const [viewImage, setViewImage] = useState(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  const { socket, on, emit, isConnected } = useSocket();
-  const [isOppositeOnline, setIsOppositeOnline] = useState(false);
+  const { socket, on, isConnected } = useSocket();
 
   useEffect(() => {
     if (!room) return;
@@ -30,15 +27,6 @@ const OwnerChatWindow = ({
 
   useEffect(() => {
     if (!room || !isConnected) return;
-
-    emit("chat:join", {
-      roomId: room._id,
-      userId: currentUserId,
-    });
-
-    emit("chat:mark:read", {
-      roomId: room._id,
-    });
 
     const unsubMessage = on("chat:message:new", (data) => {
       if (data.roomId === room._id) {
@@ -76,64 +64,39 @@ const OwnerChatWindow = ({
     });
 
     return () => {
-      emit("chat:leave", { roomId: room._id });
       unsubMessage();
       unsubRoomUpdate();
     };
-  }, [room, isConnected, currentUserId]);
+  }, [room, isConnected, currentUserId, on]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
-    if (!room || !isConnected) return;
+    if (!room || !isConnected || messages.length === 0) return;
 
-    const oppositeId =
-      userRole === "owner"
-        ? room.shelterId?._id?.toString() || room.shelterId?.toString()
-        : room.ownerId?._id?.toString() || room.ownerId?.toString();
+    const undeliveredMessages = messages.filter(
+      (msg) =>
+        msg.senderId?.toString() !== currentUserId?.toString() &&
+        msg.senderId?._id?.toString() !== currentUserId?.toString() &&
+        (!msg.deliveredTo ||
+          !msg.deliveredTo.some(
+            (d) => d.userId?.toString() === currentUserId?.toString()
+          ))
+    );
 
-    setIsOppositeOnline(false);
-
-    const unsubOnline = on("user:online", (data) => {
-      if (
-        data.userId?.toString() === oppositeId &&
-        data.roomId?.toString() === room._id?.toString()
-      ) {
-        setIsOppositeOnline(true);
+    undeliveredMessages.forEach(async (msg) => {
+      try {
+        await fetch(`${API_URL}/api/chat/messages/${msg._id}/delivered`, {
+          method: "PATCH",
+          credentials: "include",
+        });
+      } catch (error) {
+        console.error("Mark delivered error:", error);
       }
     });
-
-    const unsubOffline = on("user:offline", (data) => {
-      if (
-        data.userId?.toString() === oppositeId &&
-        data.roomId?.toString() === room._id?.toString()
-      ) {
-        setIsOppositeOnline(false);
-      }
-    });
-
-    return () => {
-      unsubOnline();
-      unsubOffline();
-      setIsOppositeOnline(false);
-    };
-  }, [room, isConnected, userRole, on]);
-
-  useEffect(() => {
-    if (!room || !isConnected) return;
-
-    const unsubWallpaper = on("chat:wallpaper:changed", (data) => {
-      if (data.roomId === room._id) {
-        onWallpaperChange(data.wallpaper);
-      }
-    });
-
-    return () => {
-      unsubWallpaper();
-    };
-  }, [room, isConnected]);
+  }, [messages, room, currentUserId, isConnected]);
 
   useEffect(() => {
     if (!room || !isConnected) return;
@@ -180,40 +143,6 @@ const OwnerChatWindow = ({
     };
   }, [room, isConnected, on]);
 
-  useEffect(() => {
-    if (!room || !isConnected || messages.length === 0) return;
-
-    const undeliveredMessages = messages.filter(
-      (msg) =>
-        msg.senderId?.toString() !== currentUserId?.toString() &&
-        msg.senderId?._id?.toString() !== currentUserId?.toString() &&
-        (!msg.deliveredTo ||
-          !msg.deliveredTo.some(
-            (d) => d.userId?.toString() === currentUserId?.toString()
-          ))
-    );
-
-    undeliveredMessages.forEach(async (msg) => {
-      try {
-        await fetch(`${API_URL}/api/chat/messages/${msg._id}/delivered`, {
-          method: "PATCH",
-          credentials: "include",
-        });
-      } catch (error) {
-        console.error("Mark delivered error:", error);
-      }
-    });
-  }, [messages, room, currentUserId, isConnected]);
-
-  const handleScroll = () => {
-    if (!messagesContainerRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } =
-      messagesContainerRef.current;
-    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setShowScrollButton(!isNearBottom);
-  };
-
   const fetchMessages = async () => {
     try {
       const response = await fetch(
@@ -234,40 +163,49 @@ const OwnerChatWindow = ({
     }
   };
 
-  const handleDeleteMessage = async (messageId, deleteForEveryone) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/chat/messages/${messageId}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ deleteForEveryone }),
-        }
-      );
-
-      const data = await response.json();
-      if (data.success) {
-        if (deleteForEveryone) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m._id === messageId
-                ? {
-                    ...m,
-                    deletedForEveryone: true,
-                    content: "This message was deleted",
-                  }
-                : m
-            )
+  const handleDeleteMessage = (messageId, deleteForEveryone) => {
+    showConfirmDialog({
+      title: deleteForEveryone ? "Delete for Everyone" : "Delete for Me",
+      message: deleteForEveryone
+        ? "This message will be deleted for everyone in the chat."
+        : "This message will be deleted only for you.",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(
+            `${API_URL}/api/chat/messages/${messageId}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ deleteForEveryone }),
+            }
           );
-        } else {
-          setMessages((prev) => prev.filter((m) => m._id !== messageId));
+
+          const data = await response.json();
+          if (data.success) {
+            if (deleteForEveryone) {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m._id === messageId
+                    ? {
+                        ...m,
+                        deletedForEveryone: true,
+                        content: "This message was deleted",
+                      }
+                    : m
+                )
+              );
+            } else {
+              setMessages((prev) => prev.filter((m) => m._id !== messageId));
+            }
+            setMessageMenu(null);
+          }
+        } catch (error) {
+          console.error("Delete message error:", error);
         }
-        setMessageMenu(null);
-      }
-    } catch (error) {
-      console.error("Delete message error:", error);
-    }
+      },
+    });
   };
 
   const handleImageDownload = async (imageUrl) => {
@@ -287,11 +225,27 @@ const OwnerChatWindow = ({
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Image download failed:", error);
+      showConfirmDialog({
+        title: "Download Failed",
+        message: "Failed to download image",
+        type: "error",
+        showCancel: false,
+      });
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+    });
+  };
+
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } =
+      messagesContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollButton(!isNearBottom);
   };
 
   const formatTime = (timestamp) => {
@@ -311,6 +265,7 @@ const OwnerChatWindow = ({
 
   return (
     <div className="flex-1 flex flex-col bg-[#1e202c] relative">
+      {/* Messages Container - Scrollable */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
@@ -336,7 +291,7 @@ const OwnerChatWindow = ({
             <div key={message._id}>
               {showDate && (
                 <div className="flex justify-center my-4">
-                  <div className="bg-[#31323e]/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-white/60">
+                  <div className="bg-[#31323e]/90 rounded-full px-3 py-1 text-xs text-white/60 backdrop-blur-sm">
                     {new Date(message.createdAt).toLocaleDateString()}
                   </div>
                 </div>
@@ -344,7 +299,7 @@ const OwnerChatWindow = ({
 
               {message.messageType === "system" ? (
                 <div className="flex justify-center">
-                  <div className="bg-[#31323e]/80 backdrop-blur-sm rounded-lg px-4 py-2 text-xs text-white/60">
+                  <div className="bg-[#31323e]/90 rounded-lg px-4 py-2 text-xs text-white/60 backdrop-blur-sm">
                     {message.content}
                   </div>
                 </div>
@@ -354,10 +309,10 @@ const OwnerChatWindow = ({
                 >
                   <div className="relative group max-w-[70%]">
                     <div
-                      className={`rounded-xl px-4 py-2 shadow-lg ${
+                      className={`rounded-2xl px-4 py-2 shadow-lg ${
                         isOwn
                           ? "bg-[#60519b] text-white"
-                          : "bg-[#31323e]/90 backdrop-blur-sm text-white"
+                          : "bg-[#31323e]/90 text-white backdrop-blur-sm"
                       }`}
                     >
                       {message.replyTo && (
@@ -369,7 +324,7 @@ const OwnerChatWindow = ({
                       {message.messageType === "image" &&
                         message.images &&
                         message.images.length > 0 && (
-                          <div className="relative group mb-2">
+                          <div className="relative group/img mb-2">
                             <img
                               src={message.images[0]}
                               alt="Shared image"
@@ -377,10 +332,10 @@ const OwnerChatWindow = ({
                               onClick={() => setViewImage(message.images[0])}
                             />
 
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-lg">
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-lg">
                               <button
                                 onClick={() => setViewImage(message.images[0])}
-                                className="bg-white/90 text-black text-xs px-3 py-1 rounded hover:bg-white transition-all"
+                                className="bg-white/90 text-black text-xs px-3 py-1 rounded hover:bg-white transition-colors"
                               >
                                 View
                               </button>
@@ -389,7 +344,7 @@ const OwnerChatWindow = ({
                                 onClick={() =>
                                   handleImageDownload(message.images[0])
                                 }
-                                className="bg-white/90 text-black text-xs px-3 py-1 rounded hover:bg-white transition-all"
+                                className="bg-white/90 text-black text-xs px-3 py-1 rounded hover:bg-white transition-colors"
                               >
                                 Download
                               </button>
@@ -398,9 +353,7 @@ const OwnerChatWindow = ({
                         )}
 
                       {message.content && (
-                        <p className="text-sm break-words whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        <p className="text-sm break-words">{message.content}</p>
                       )}
 
                       <div className="flex items-center justify-end gap-1 mt-1">
@@ -438,28 +391,20 @@ const OwnerChatWindow = ({
                         {messageMenu === message._id && (
                           <div className="absolute right-0 top-full mt-1 bg-[#31323e] border border-white/10 rounded-lg shadow-xl z-10 min-w-[150px]">
                             <button
-                              onClick={() => {
-                                setDeleteDialog({
-                                  messageId: message._id,
-                                  type: "me",
-                                });
-                                setMessageMenu(null);
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-all"
+                              onClick={() =>
+                                handleDeleteMessage(message._id, false)
+                              }
+                              className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
                             >
                               <Trash2 size={14} />
                               Delete for me
                             </button>
 
                             <button
-                              onClick={() => {
-                                setDeleteDialog({
-                                  messageId: message._id,
-                                  type: "everyone",
-                                });
-                                setMessageMenu(null);
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-all"
+                              onClick={() =>
+                                handleDeleteMessage(message._id, true)
+                              }
+                              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
                             >
                               <Trash2 size={14} />
                               Delete for everyone
@@ -477,15 +422,17 @@ const OwnerChatWindow = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Scroll to Bottom Button */}
       {showScrollButton && (
         <button
-          onClick={scrollToBottom}
-          className="absolute bottom-4 right-4 bg-[#60519b] hover:bg-[#7d6ab8] text-white rounded-full p-3 shadow-lg transition-all hover:scale-110"
+          onClick={() => scrollToBottom(true)}
+          className="absolute bottom-4 right-4 bg-[#60519b] hover:bg-[#7d6ab8] text-white rounded-full p-3 shadow-lg transition-all hover:scale-110 z-10"
         >
           <ArrowDown size={20} />
         </button>
       )}
 
+      {/* Image Viewer Modal */}
       {viewImage && (
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
@@ -501,39 +448,13 @@ const OwnerChatWindow = ({
 
             <button
               onClick={() => setViewImage(null)}
-              className="absolute -top-4 -right-4 bg-white text-black rounded-full p-2 shadow-lg hover:bg-gray-200 transition-all"
+              className="absolute -top-4 -right-4 bg-white text-black rounded-full p-2 shadow-lg hover:bg-gray-200 transition-colors"
             >
-              <X size={18} />
+              <XIcon size={18} />
             </button>
           </div>
         </div>
       )}
-
-      <ConfirmationDialog
-        isOpen={deleteDialog !== null}
-        onClose={() => setDeleteDialog(null)}
-        onConfirm={() => {
-          if (deleteDialog) {
-            handleDeleteMessage(
-              deleteDialog.messageId,
-              deleteDialog.type === "everyone"
-            );
-          }
-        }}
-        title={
-          deleteDialog?.type === "everyone"
-            ? "Delete for Everyone?"
-            : "Delete for Me?"
-        }
-        message={
-          deleteDialog?.type === "everyone"
-            ? "This message will be deleted for all participants in this chat."
-            : "This message will only be deleted from your view."
-        }
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
     </div>
   );
 };
