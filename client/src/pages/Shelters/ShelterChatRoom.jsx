@@ -21,7 +21,7 @@ const ShelterChatRoom = () => {
         const data = await response.json();
         if (data.success) {
           console.log(data);
-          setCurrentUserId(data.profile._id);
+          setCurrentUserId(data.profile.shelterId._id);
         }
       } catch (error) {
         console.error("Fetch user ID error:", error);
