@@ -31,6 +31,31 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    console.group("👤 CURRENT LOGIN USER (ChatWindow)");
+
+    console.log("currentUserId:", currentUserId, typeof currentUserId);
+    console.log("userRole:", userRole);
+
+    console.log("room.ownerId:", room?.ownerId?.toString());
+    console.log("room.shelterId:", room?.shelterId?.toString());
+
+    console.log(
+      "Is Owner?",
+      currentUserId?.toString() === room?.ownerId?.toString()
+    );
+
+    console.log(
+      "Is Shelter?",
+      currentUserId?.toString() === room?.shelterId?.toString()
+    );
+
+    console.log("Socket connected:", isConnected);
+    console.log("Socket id:", socket?.id);
+
+    console.groupEnd();
+  }, []);
+
+  useEffect(() => {
     if (!room) return;
     fetchMessages();
   }, [room]);
@@ -41,6 +66,33 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
     emit("chat:join", { roomId: room._id });
 
     const unsubMessage = on("chat:message:new", (data) => {
+      console.group("📥 SOCKET MESSAGE RECEIVED");
+      console.log("Room ID (from socket):", data.roomId, typeof data.roomId);
+      console.log("Current Room ID:", room._id, typeof room._id);
+
+      console.log("Message Object:", data.message);
+      console.log("Message _id:", data.message?._id, typeof data.message?._id);
+
+      console.log(
+        "Sender ID (raw):",
+        data.message?.senderId,
+        typeof data.message?.senderId
+      );
+
+      console.log(
+        "Sender ID._id:",
+        data.message?.senderId?._id,
+        typeof data.message?.senderId?._id
+      );
+
+      console.log("Current User ID:", currentUserId, typeof currentUserId);
+
+      console.log(
+        "Sender === CurrentUser ?",
+        data.message?.senderId?.toString?.() === currentUserId?.toString?.()
+      );
+
+      console.groupEnd();
       if (data.roomId === room._id) {
         setMessages((prev) => {
           // Avoid duplicates
@@ -182,6 +234,20 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
 
       const data = await response.json();
       if (data.success) {
+        console.group("📦 FETCHED MESSAGES");
+        data.data.messages.forEach((msg, i) => {
+          console.log(`Message #${i}`);
+          console.log("Message ID:", msg._id);
+          console.log("Sender ID:", msg.senderId);
+          console.log("Sender ID type:", typeof msg.senderId);
+          console.log("Sender ID._id:", msg.senderId?._id);
+          console.log(
+            "Is Own Message?",
+            msg.senderId?.toString?.() === currentUserId?.toString?.()
+          );
+          console.log("-----");
+        });
+        console.groupEnd();
         setMessages(data.data.messages);
       }
     } catch (error) {
@@ -249,6 +315,17 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
   const sendMessage = async () => {
     if (!messageInput.trim() && !imageFile) return;
 
+    console.group("📤 SEND MESSAGE CLICKED");
+
+    console.log("Room ID:", room._id, typeof room._id);
+    console.log("Current User ID:", currentUserId, typeof currentUserId);
+    console.log("User Role:", userRole);
+
+    console.log("Message Text:", messageInput);
+    console.log("Has Image:", !!imageFile);
+
+    console.groupEnd();
+
     const formData = new FormData();
 
     if (imageFile) {
@@ -275,6 +352,32 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
 
       const data = await response.json();
       if (data.success) {
+        console.group("✅ MESSAGE SENT - API RESPONSE");
+
+        console.log("Returned Message:", data.data);
+        console.log("Message ID:", data.data._id);
+
+        console.log(
+          "Sender ID:",
+          data.data.senderId,
+          typeof data.data.senderId
+        );
+
+        console.log(
+          "Sender ID._id:",
+          data.data.senderId?._id,
+          typeof data.data.senderId?._id
+        );
+
+        console.log("Current User ID:", currentUserId, typeof currentUserId);
+
+        console.log(
+          "Is Own Message?",
+          data.data.senderId?.toString?.() === currentUserId?.toString?.()
+        );
+
+        console.groupEnd();
+
         setMessages((prev) => [...prev, data.data]);
       }
     } catch (error) {
@@ -444,11 +547,30 @@ const ChatWindow = ({ room, userRole, currentUserId, onBack }) => {
         }}
       >
         {messages.map((message, idx) => {
-          console.log({
-            senderId: message.senderId,
-            senderIdType: typeof message.senderId,
-            currentUserId,
-          });
+          console.group("🧱 RENDER MESSAGE");
+
+          console.log("Message ID:", message._id);
+          console.log("Sender ID (raw):", message.senderId);
+          console.log("Sender ID type:", typeof message.senderId);
+
+          console.log("Sender ID._id:", message.senderId?._id);
+          console.log("Current User ID:", currentUserId);
+
+          console.log(
+            "String Compare (sender vs current):",
+            message.senderId?.toString?.(),
+            currentUserId?.toString?.()
+          );
+
+          console.log(
+            "isOwn:",
+            message.senderId?.toString?.() === currentUserId?.toString?.() ||
+              message.senderId?._id?.toString?.() ===
+                currentUserId?.toString?.()
+          );
+
+          console.groupEnd();
+
           const isOwn =
             message.senderId?.toString() === currentUserId?.toString() ||
             message.senderId?._id?.toString() === currentUserId?.toString();

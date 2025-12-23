@@ -20,6 +20,7 @@ const ShelterChatRoom = () => {
         );
         const data = await response.json();
         if (data.success) {
+          console.log(data);
           setCurrentUserId(data.profile._id);
         }
       } catch (error) {

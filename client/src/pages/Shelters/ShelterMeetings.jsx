@@ -20,6 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ShelterMeetings = () => {
   const [meetings, setMeetings] = useState([]);
   const [eligibleOwners, setEligibleOwners] = useState([]);
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -110,6 +111,11 @@ const ShelterMeetings = () => {
       );
 
       if (res.data.success) {
+        setToast({
+          type: "success",
+          title: "Meeting Scheduled",
+          message: "Meeting has been scheduled successfully",
+        });
         setMeetings([res.data.meeting, ...meetings]);
         setShowAddModal(false);
         setFormData({
@@ -123,7 +129,11 @@ const ShelterMeetings = () => {
         });
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to create meeting");
+      setToast({
+        type: "error",
+        title: "Meeting Failed",
+        message: err.response?.data?.message || "Failed to create meeting",
+      });
     }
   };
 
@@ -152,11 +162,21 @@ const ShelterMeetings = () => {
             m._id === selectedMeeting._id ? res.data.meeting : m
           )
         );
+        setToast({
+          type: "success",
+          title: "Meeting Updated",
+          message: "Meeting details updated successfully",
+        });
+
         setShowEditModal(false);
         setSelectedMeeting(null);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update meeting");
+      setToast({
+        type: "error",
+        title: "Update Failed",
+        message: err.response?.data?.message || "Failed to update meeting",
+      });
     }
   };
 
@@ -200,7 +220,11 @@ const ShelterMeetings = () => {
         setCancelData({ reason: "", confirmName: "" });
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to cancel meeting");
+      setToast({
+        type: "error",
+        title: "Cancellation Failed",
+        message: err.response?.data?.message || "Failed to cancel meeting",
+      });
     }
   };
 

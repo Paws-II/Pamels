@@ -20,7 +20,9 @@ const OwnerChatRoom = () => {
         );
         const data = await response.json();
         if (data.success) {
-          setCurrentUserId(data.profile._id);
+          setCurrentUserId(data.profile.ownerId._id);
+
+          console.log("This is incoming ", data);
         }
       } catch (error) {
         console.error("Fetch user ID error:", error);
