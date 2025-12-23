@@ -22,6 +22,12 @@ router.post("/messages/:messageId/reaction", chatController.toggleReaction);
 router.patch("/rooms/:roomId/block", chatController.blockRoom);
 router.patch("/rooms/:roomId/close", chatController.closeRoom);
 router.patch("/messages/:messageId/delivered", chatController.markAsDelivered);
+router.patch("/messages/:messageId/read", chatController.markAsRead);
 router.patch("/rooms/:roomId/wallpaper", chatController.updateWallpaper);
+router.post(
+  "/rooms/:roomId/wallpaper/upload",
+  upload.single("wallpaper"),
+  chatController.uploadWallpaper
+);
 
 export default router;

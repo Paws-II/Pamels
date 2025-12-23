@@ -5,6 +5,9 @@ export const setupChatHandlers = (io, socket) => {
   socket.on("chat:join", async ({ roomId }) => {
     try {
       const room = await RoomChatPet.findById(roomId).lean();
+      const RoomChatMessage = (
+        await import("../../models/rooms/RoomChatMessage.js")
+      ).default;
 
       if (!room) {
         return safeEmit(socket, "chat:error", {
@@ -24,7 +27,6 @@ export const setupChatHandlers = (io, socket) => {
       socket.join(`room:${roomId}`);
       console.log(`User ${socket.userId} joined room ${roomId}`);
 
-      // Emit user online to room participants
       const recipientId =
         socket.userId.toString() === room.ownerId.toString()
           ? room.shelterId.toString()
@@ -35,10 +37,79 @@ export const setupChatHandlers = (io, socket) => {
         roomId,
       });
 
+      const unreadMessages = await RoomChatMessage.find({
+        roomId,
+        senderId: { $ne: socket.userId },
+        "readBy.userId": { $ne: socket.userId },
+      }).lean();
+
+      if (unreadMessages.length > 0) {
+        await RoomChatMessage.updateMany(
+          {
+            roomId,
+            senderId: { $ne: socket.userId },
+            "readBy.userId": { $ne: socket.userId },
+          },
+          {
+            $push: {
+              readBy: {
+                userId: socket.userId,
+                readAt: new Date(),
+              },
+            },
+          }
+        );
+
+        for (const msg of unreadMessages) {
+          io.to(`user:${msg.senderId.toString()}`).emit("chat:message:read", {
+            messageId: msg._id.toString(),
+            roomId: roomId,
+            readBy: socket.userId,
+            readAt: new Date(),
+          });
+        }
+      }
+
       safeEmit(socket, "chat:joined", {
         roomId,
         success: true,
       });
+
+      const undeliveredMessages = await RoomChatMessage.find({
+        roomId,
+        senderId: { $ne: socket.userId },
+        "deliveredTo.userId": { $ne: socket.userId },
+      }).lean();
+
+      if (undeliveredMessages.length > 0) {
+        await RoomChatMessage.updateMany(
+          {
+            roomId,
+            senderId: { $ne: socket.userId },
+            "deliveredTo.userId": { $ne: socket.userId },
+          },
+          {
+            $push: {
+              deliveredTo: {
+                userId: socket.userId,
+                deliveredAt: new Date(),
+              },
+            },
+          }
+        );
+
+        for (const msg of undeliveredMessages) {
+          io.to(`user:${msg.senderId.toString()}`).emit(
+            "chat:message:delivered",
+            {
+              messageId: msg._id.toString(),
+              roomId: roomId,
+              userId: socket.userId,
+              deliveredAt: new Date(),
+            }
+          );
+        }
+      }
     } catch (error) {
       console.error("Chat join error:", error);
       safeEmit(socket, "chat:error", {
@@ -47,9 +118,26 @@ export const setupChatHandlers = (io, socket) => {
     }
   });
 
-  socket.on("chat:leave", ({ roomId }) => {
-    socket.leave(`room:${roomId}`);
-    console.log(`User ${socket.userId} left room ${roomId}`);
+  socket.on("chat:leave", async ({ roomId }) => {
+    try {
+      socket.leave(`room:${roomId}`);
+      console.log(`User ${socket.userId} left room ${roomId}`);
+
+      const room = await RoomChatPet.findById(roomId).lean();
+      if (room) {
+        const recipientId =
+          socket.userId.toString() === room.ownerId.toString()
+            ? room.shelterId.toString()
+            : room.ownerId.toString();
+
+        io.to(`user:${recipientId}`).emit("user:offline", {
+          userId: socket.userId,
+          roomId: roomId,
+        });
+      }
+    } catch (error) {
+      console.error("Chat leave error:", error);
+    }
   });
 
   socket.on("chat:typing", async ({ roomId, isTyping }) => {
@@ -84,7 +172,9 @@ export const setupChatHandlers = (io, socket) => {
   socket.on("chat:mark:read", async ({ roomId }) => {
     try {
       const room = await RoomChatPet.findById(roomId);
-
+      const RoomChatMessage = (
+        await import("../../models/rooms/RoomChatMessage.js")
+      ).default;
       if (!room) return;
 
       if (socket.userRole === "owner") {
@@ -92,18 +182,45 @@ export const setupChatHandlers = (io, socket) => {
       } else {
         room.unreadCount.shelter = 0;
       }
-
       await room.save();
 
-      const recipientId =
-        socket.userRole === "owner"
-          ? room.shelterId.toString()
-          : room.ownerId.toString();
-
-      io.to(`user:${recipientId}`).emit("chat:read", {
+      const unreadMessages = await RoomChatMessage.find({
         roomId,
-        readBy: socket.userId,
-      });
+        senderId: { $ne: socket.userId },
+        "readBy.userId": { $ne: socket.userId },
+      }).lean();
+
+      if (unreadMessages.length > 0) {
+        await RoomChatMessage.updateMany(
+          {
+            roomId,
+            senderId: { $ne: socket.userId },
+            "readBy.userId": { $ne: socket.userId },
+          },
+          {
+            $push: {
+              readBy: {
+                userId: socket.userId,
+                readAt: new Date(),
+              },
+            },
+          }
+        );
+
+        const recipientId =
+          socket.userRole === "owner"
+            ? room.shelterId.toString()
+            : room.ownerId.toString();
+
+        for (const msg of unreadMessages) {
+          io.to(`user:${msg.senderId.toString()}`).emit("chat:message:read", {
+            messageId: msg._id.toString(),
+            roomId: roomId,
+            readBy: socket.userId,
+            readAt: new Date(),
+          });
+        }
+      }
     } catch (error) {
       console.error("Mark read error:", error);
     }

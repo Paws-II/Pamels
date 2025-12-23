@@ -118,20 +118,42 @@ const chatController = {
         });
       }
 
-      await RoomChatMessage.updateMany(
-        {
-          roomId,
-          "readBy.userId": { $ne: userId },
-        },
-        {
-          $push: {
-            readBy: {
-              userId,
-              readAt: new Date(),
-            },
+      const unreadMessages = await RoomChatMessage.find({
+        roomId,
+        "readBy.userId": { $ne: userId },
+        senderId: { $ne: userId },
+      }).lean();
+
+      if (unreadMessages.length > 0) {
+        await RoomChatMessage.updateMany(
+          {
+            roomId,
+            "readBy.userId": { $ne: userId },
+            senderId: { $ne: userId },
           },
+          {
+            $push: {
+              readBy: {
+                userId,
+                readAt: new Date(),
+              },
+            },
+          }
+        );
+
+        if (req.app.locals.io) {
+          for (const msg of unreadMessages) {
+            req.app.locals.io
+              .to(`user:${msg.senderId.toString()}`)
+              .emit("chat:message:read", {
+                messageId: msg._id.toString(),
+                roomId: roomId,
+                readBy: userId,
+                readAt: new Date(),
+              });
+          }
         }
-      );
+      }
 
       return res.json({
         success: true,
@@ -190,17 +212,52 @@ const chatController = {
 
       const senderModel = userRole === "owner" ? "OwnerLogin" : "ShelterLogin";
 
+      let imageUrls = [];
+
+      // Handle image upload
+      if (req.file && messageType === "image") {
+        try {
+          const uploadResult = await new Promise((resolve, reject) => {
+            cloudinary.uploader
+              .upload_stream(
+                {
+                  folder: "chat-images",
+                  resource_type: "image",
+                  transformation: [
+                    { width: 800, height: 800, crop: "limit" },
+                    { quality: "auto:good" },
+                  ],
+                },
+                (error, result) => {
+                  if (error) reject(error);
+                  else resolve(result);
+                }
+              )
+              .end(req.file.buffer);
+          });
+
+          imageUrls.push(uploadResult.secure_url);
+        } catch (uploadError) {
+          console.error("Image upload error:", uploadError);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload image",
+          });
+        }
+      }
+
       const message = await RoomChatMessage.create({
         roomId,
         senderId: userId,
         senderModel,
         messageType,
         content: content || "",
+        images: imageUrls,
         replyTo: replyTo || null,
       });
 
       room.lastMessage = {
-        content: content || "",
+        content: messageType === "image" ? "📷 Image" : content || "",
         senderId: userId,
         timestamp: new Date(),
       };
@@ -237,6 +294,56 @@ const chatController = {
               ? room.unreadCount.shelter
               : room.unreadCount.owner,
         });
+
+        const Notification = (
+          await import("../../models/notifications/Notification.js")
+        ).default;
+        const OwnerProfile = (
+          await import("../../models/profiles/OwnerProfile.js")
+        ).default;
+        const ShelterProfile = (
+          await import("../../models/profiles/ShelterProfile.js")
+        ).default;
+
+        const recipientSockets = await req.app.locals.io
+          .in(`user:${recipientId}`)
+          .fetchSockets();
+        const isRecipientInRoom = recipientSockets.some((s) =>
+          s.rooms.has(`room:${roomId}`)
+        );
+
+        if (!isRecipientInRoom) {
+          let senderName = "Someone";
+          if (userRole === "owner") {
+            const ownerProfile = await OwnerProfile.findOne({ ownerId: userId })
+              .select("name")
+              .lean();
+            senderName = ownerProfile?.name || "An owner";
+          } else {
+            const shelterProfile = await ShelterProfile.findOne({
+              shelterId: userId,
+            })
+              .select("name")
+              .lean();
+            senderName = shelterProfile?.name || "A shelter";
+          }
+          const notification = await Notification.create({
+            userId: recipientId,
+            userModel: userRole === "owner" ? "ShelterLogin" : "OwnerLogin",
+            type: "general",
+            title: "New Message",
+            message: `You have a new message from ${senderName}`,
+            metadata: {
+              roomId: roomId,
+              petName: room.petId?.name || "Unknown Pet",
+            },
+          });
+
+          req.app.locals.io.to(`user:${recipientId}`).emit("notification:new", {
+            ...notification.toObject(),
+            timestamp: Date.now(),
+          });
+        }
       }
 
       return res.status(201).json({
@@ -266,6 +373,11 @@ const chatController = {
         });
       }
 
+      // Don't mark own messages as delivered
+      if (message.senderId.toString() === userId.toString()) {
+        return res.json({ success: true });
+      }
+
       const alreadyDelivered = message.deliveredTo.some(
         (d) => d.userId.toString() === userId.toString()
       );
@@ -279,10 +391,12 @@ const chatController = {
 
         if (req.app.locals.io) {
           req.app.locals.io
-            .to(`user:${message.senderId}`)
+            .to(`user:${message.senderId.toString()}`)
             .emit("chat:message:delivered", {
-              messageId,
+              messageId: messageId.toString(),
+              roomId: message.roomId.toString(),
               userId,
+              deliveredAt: new Date(),
             });
         }
       }
@@ -295,6 +409,59 @@ const chatController = {
       return res.status(500).json({
         success: false,
         message: "Failed to mark as delivered",
+      });
+    }
+  },
+  markAsRead: async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const userId = req.userId;
+
+      const message = await RoomChatMessage.findById(messageId);
+
+      if (!message) {
+        return res.status(404).json({
+          success: false,
+          message: "Message not found",
+        });
+      }
+
+      // Don't mark own messages as read
+      if (message.senderId.toString() === userId.toString()) {
+        return res.json({ success: true });
+      }
+
+      const alreadyRead = message.readBy.some(
+        (r) => r.userId.toString() === userId.toString()
+      );
+
+      if (!alreadyRead) {
+        message.readBy.push({
+          userId,
+          readAt: new Date(),
+        });
+        await message.save();
+
+        if (req.app.locals.io) {
+          req.app.locals.io
+            .to(`user:${message.senderId.toString()}`)
+            .emit("chat:message:read", {
+              messageId: messageId.toString(),
+              roomId: message.roomId.toString(),
+              readBy: userId,
+              readAt: new Date(),
+            });
+        }
+      }
+
+      return res.json({
+        success: true,
+      });
+    } catch (error) {
+      console.error("Mark as read error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to mark as read",
       });
     }
   },
@@ -342,6 +509,83 @@ const chatController = {
       return res.status(500).json({
         success: false,
         message: "Failed to update wallpaper",
+      });
+    }
+  },
+  uploadWallpaper: async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const userId = req.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "No wallpaper image provided",
+        });
+      }
+
+      const room = await RoomChatPet.findById(roomId);
+
+      if (!room) {
+        return res.status(404).json({
+          success: false,
+          message: "Chat room not found",
+        });
+      }
+
+      if (
+        room.ownerId.toString() !== userId.toString() &&
+        room.shelterId.toString() !== userId.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied",
+        });
+      }
+
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload_stream(
+        {
+          folder: "chat-wallpapers",
+          resource_type: "image",
+          transformation: [
+            { width: 1920, height: 1080, crop: "limit" },
+            { quality: "auto:good" },
+          ],
+        },
+        async (error, uploadResult) => {
+          if (error) {
+            return res.status(500).json({
+              success: false,
+              message: "Failed to upload wallpaper",
+            });
+          }
+
+          room.wallpaper = uploadResult.secure_url;
+          await room.save();
+
+          if (req.app.locals.io) {
+            req.app.locals.io
+              .to(`room:${roomId}`)
+              .emit("chat:wallpaper:changed", {
+                roomId,
+                wallpaper: uploadResult.secure_url,
+              });
+          }
+
+          return res.json({
+            success: true,
+            wallpaperUrl: uploadResult.secure_url,
+          });
+        }
+      );
+
+      result.end(req.file.buffer);
+    } catch (error) {
+      console.error("Upload wallpaper error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to upload wallpaper",
       });
     }
   },
