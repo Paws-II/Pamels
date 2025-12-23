@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import OwnerChatSidebar from "../../components/Owners/test/OwnerChatSidebar";
-import OwnerChatWindow from "../../components/Owners/test/OwnerChatWindow";
+import OwnerChatSidebar from "../../components/Owners/Chat/OwnerChatSidebar";
+import OwnerChatWindow from "../../components/Owners/Chat/OwnerChatWindow";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
