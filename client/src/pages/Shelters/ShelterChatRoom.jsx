@@ -1,26 +1,24 @@
-import React, { useState } from "react";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ChatSidebar from "../../components/Chat/ChatSidebar";
-import ChatWindow from "../../components/Chat/ChatWindow";
+import ShelterChatSidebar from "../../components/Shelters/Chat/ShelterChatSidebar";
+import ShelterChatWindow from "../../components/Shelters/Chat/ShelterChatWindow";
 
-const ShelterChatRoom = () => {
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const ShelterChatPage = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const response = await fetch(
-          `${
-            import.meta.env.VITE_API_URL || "http://localhost:8000"
-          }/api/auth/shelter/profile`,
-          { credentials: "include" }
-        );
+        const response = await fetch(`${API_URL}/api/auth/shelter/profile`, {
+          credentials: "include",
+        });
         const data = await response.json();
         if (data.success) {
-          console.log(data);
           setCurrentUserId(data.profile.shelterId._id);
         }
       } catch (error) {
@@ -31,31 +29,15 @@ const ShelterChatRoom = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#1e202c] flex flex-col">
-      <div className="bg-[#31323e] border-b border-white/10 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/shelter-dashboard")}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <div className="flex items-center gap-2">
-            <MessageCircle size={24} className="text-[#4a5568]" />
-            <h1 className="text-xl font-bold text-white">Chat</h1>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        <ChatSidebar
+    <div className="h-screen bg-[#1e202c] flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        <ShelterChatSidebar
           onSelectRoom={setSelectedRoom}
           selectedRoomId={selectedRoom?._id}
           userRole="shelter"
         />
-
         {selectedRoom ? (
-          <ChatWindow
+          <ShelterChatWindow
             room={selectedRoom}
             userRole="shelter"
             currentUserId={currentUserId}
@@ -63,8 +45,16 @@ const ShelterChatRoom = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-[#1e202c]">
             <div className="text-center text-white/40">
-              <MessageCircle size={64} className="mx-auto mb-4 opacity-50" />
-              <p className="text-lg">Select a chat to start messaging</p>
+              <MessageCircle
+                size={64}
+                className="mx-auto mb-4 opacity-50 animate-pulse"
+              />
+              <p className="text-lg font-medium">
+                Select a chat to start messaging
+              </p>
+              <p className="text-sm mt-2 text-white/30">
+                Choose a conversation from the sidebar
+              </p>
             </div>
           </div>
         )}
@@ -73,4 +63,4 @@ const ShelterChatRoom = () => {
   );
 };
 
-export default ShelterChatRoom;
+export default ShelterChatPage;
