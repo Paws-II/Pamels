@@ -1,171 +1,13 @@
 import React, { useEffect, useRef } from "react";
-import { gsap } from "gsap";
 
-import card1 from "../../../assets/card/image-part-001.png";
-import card2 from "../../../assets/card/image-part-002.png";
-import card3 from "../../../assets/card/image-part-003.png";
-
-const HeroNarrative = ({ titleRef }) => {
-  const sectionRef = useRef(null);
-
-  const leftRef = useRef(null);
-  const rightRef = useRef(null);
-  const centerRef = useRef(null);
-
-  const tlRef = useRef(null);
-
-  const isInView = useRef(false);
-  const isAnimating = useRef(false);
-  const isComplete = useRef(false);
-
-  const targetProgress = useRef(0);
-  const touchStartY = useRef(0);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isInView.current = entry.isIntersecting;
-      },
-      { threshold: 0.6 }
-    );
-
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    gsap.set(leftRef.current, { rotate: -15, x: 0, y: 0, zIndex: 10 });
-    gsap.set(rightRef.current, { rotate: 15, x: 0, y: 0, zIndex: 10 });
-    gsap.set(centerRef.current, { x: 0, y: 0, zIndex: 20 });
-
-    const tl = gsap.timeline({
-      paused: true,
-      onStart: () => {
-        isAnimating.current = true;
-        document.body.style.overflow = "hidden";
-      },
-      onComplete: () => {
-        isAnimating.current = false;
-        isComplete.current = true;
-        document.body.style.overflow = "";
-      },
-      onReverseComplete: () => {
-        isAnimating.current = false;
-        isComplete.current = false;
-        document.body.style.overflow = "";
-      },
-    });
-
-    tl.to(
-      leftRef.current,
-      {
-        x: 140,
-        rotate: 0,
-        scale: 0.95,
-        duration: 0.7,
-        ease: "power3.out",
-      },
-      0
-    );
-
-    tl.to(
-      rightRef.current,
-      {
-        x: -140,
-        rotate: 0,
-        scale: 0.95,
-        duration: 0.7,
-        ease: "power3.out",
-      },
-      0
-    );
-
-    tl.to([leftRef.current, rightRef.current, centerRef.current], {
-      y: 30,
-      duration: 0.35,
-      ease: "power2.out",
-    });
-
-    tl.to([leftRef.current, rightRef.current, centerRef.current], {
-      x: "+=180",
-      duration: 1,
-      ease: "power2.out",
-    });
-
-    tlRef.current = tl;
-
-    const driveTimeline = (direction) => {
-      const tl = tlRef.current;
-      if (!tl) return;
-
-      targetProgress.current = gsap.utils.clamp(
-        0,
-        1,
-        targetProgress.current + (direction === "down" ? 0.08 : -0.08)
-      );
-
-      gsap.to(tl, {
-        progress: targetProgress.current,
-        duration: 0.25,
-        ease: "power2.out",
-        overwrite: true,
-      });
-    };
-
-    const onWheel = (e) => {
-      if (!isInView.current) return;
-
-      const progress = targetProgress.current;
-
-      if (progress > 0 && progress < 1) {
-        e.preventDefault();
-      }
-
-      if (e.deltaY > 0) {
-        driveTimeline("down");
-      } else if (e.deltaY < 0) {
-        driveTimeline("up");
-      }
-    };
-
-    const onTouchStart = (e) => {
-      touchStartY.current = e.touches[0].clientY;
-    };
-
-    const onTouchMove = (e) => {
-      if (!isInView.current) return;
-
-      const delta = touchStartY.current - e.touches[0].clientY;
-      if (Math.abs(delta) < 20) return;
-
-      const progress = targetProgress.current;
-
-      if (progress > 0 && progress < 1) {
-        e.preventDefault();
-      }
-
-      if (delta > 0) {
-        driveTimeline("down");
-      } else {
-        driveTimeline("up");
-      }
-
-      touchStartY.current = e.touches[0].clientY;
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-
-    return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      tl.kill();
-      document.body.style.overflow = "";
-    };
-  }, []);
-
+const HeroNarrative = ({
+  titleRef,
+  sectionRef,
+  leftRef,
+  rightRef,
+  centerRef,
+  images,
+}) => {
   return (
     <div ref={sectionRef} className="space-y-6 mt-20">
       <style>
@@ -207,19 +49,19 @@ const HeroNarrative = ({ titleRef }) => {
       <div className="relative mt-5 h-[460px]">
         <img
           ref={leftRef}
-          src={card1}
+          src={images.left}
           className="absolute top-16 left-[20px] w-[260px] rounded-2xl shadow-2xl"
           draggable={false}
         />
         <img
           ref={rightRef}
-          src={card2}
+          src={images.right}
           className="absolute top-16 right-[20px] w-[260px] rounded-2xl shadow-2xl"
           draggable={false}
         />
         <img
           ref={centerRef}
-          src={card3}
+          src={images.center}
           className="absolute top-14 left-1/2 -translate-x-1/2 w-[260px] rounded-2xl shadow-2xl"
           draggable={false}
         />

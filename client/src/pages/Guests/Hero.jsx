@@ -9,6 +9,9 @@ import bunny from "../../assets/Guests/animals/bunny.png";
 import otter from "../../assets/Guests/animals/otter.png";
 import panda from "../../assets/Guests/animals/panda.png";
 import NextSection from "../../components/Guests/Hero/NextSection";
+import card1 from "../../assets/card/image-part-001.png";
+import card2 from "../../assets/card/image-part-002.png";
+import card3 from "../../assets/card/image-part-003.png";
 
 const HERO_SLIDES = [
   {
@@ -70,6 +73,20 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
   const timelineRef = useRef(null);
   const hoverTimelineRef = useRef(null);
   const intervalRef = useRef(null);
+
+  const narrativeSectionRef = useRef(null);
+  const narrativeLeftRef = useRef(null);
+  const narrativeRightRef = useRef(null);
+  const narrativeCenterRef = useRef(null);
+
+  const narrativeTlRef = useRef(null);
+  const narrativeIsInView = useRef(false);
+  const narrativeIsAnimating = useRef(false);
+  const narrativeIsComplete = useRef(false);
+  const narrativeTargetProgress = useRef(0);
+  const narrativeTouchStartY = useRef(0);
+  const WHEEL_STEP = 0.035;
+  const TOUCH_STEP = 0.06;
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -271,6 +288,158 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
     }
   }, [activeIndex, isPaused]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        narrativeIsInView.current = entry.isIntersecting;
+      },
+      { threshold: 0.6 }
+    );
+
+    if (narrativeSectionRef.current) {
+      observer.observe(narrativeSectionRef.current);
+    }
+
+    gsap.set(narrativeLeftRef.current, { rotate: -15, x: 0, y: 0, zIndex: 10 });
+    gsap.set(narrativeRightRef.current, { rotate: 15, x: 0, y: 0, zIndex: 10 });
+    gsap.set(narrativeCenterRef.current, { x: 0, y: 0, zIndex: 20 });
+
+    const tl = gsap.timeline({
+      paused: true,
+      onStart: () => {
+        narrativeIsAnimating.current = true;
+        document.body.style.overflow = "hidden";
+      },
+      onComplete: () => {
+        narrativeIsAnimating.current = false;
+        narrativeIsComplete.current = true;
+        document.body.style.overflow = "";
+      },
+      onReverseComplete: () => {
+        narrativeIsAnimating.current = false;
+        narrativeIsComplete.current = false;
+        document.body.style.overflow = "";
+      },
+    });
+
+    tl.to(
+      narrativeLeftRef.current,
+      {
+        x: 140,
+        rotate: 0,
+        scale: 0.95,
+        duration: 0.7,
+        ease: "power3.out",
+      },
+      0
+    );
+
+    tl.to(
+      narrativeRightRef.current,
+      {
+        x: -140,
+        rotate: 0,
+        scale: 0.95,
+        duration: 0.7,
+        ease: "power3.out",
+      },
+      0
+    );
+
+    tl.to(
+      [
+        narrativeLeftRef.current,
+        narrativeRightRef.current,
+        narrativeCenterRef.current,
+      ],
+      { y: 30, duration: 0.35, ease: "power2.out" }
+    );
+
+    tl.to(
+      [
+        narrativeLeftRef.current,
+        narrativeRightRef.current,
+        narrativeCenterRef.current,
+      ],
+      { x: "+=670", duration: 2, ease: "power2.out" }
+    );
+
+    tl.to(
+      [
+        narrativeLeftRef.current,
+        narrativeRightRef.current,
+        narrativeCenterRef.current,
+      ],
+      { y: "+=380", duration: 2, ease: "power2.out" }
+    );
+
+    narrativeTlRef.current = tl;
+
+    const driveTimeline = (direction, step) => {
+      narrativeTargetProgress.current = gsap.utils.clamp(
+        0,
+        1,
+        narrativeTargetProgress.current + (direction === "down" ? step : -step)
+      );
+
+      gsap.to(narrativeTlRef.current, {
+        progress: narrativeTargetProgress.current,
+        duration: 0.45,
+        ease: "power2.out",
+        overwrite: true,
+      });
+    };
+
+    const onWheel = (e) => {
+      if (!narrativeIsInView.current) return;
+
+      const p = narrativeTargetProgress.current;
+      if (p > 0 && p < 1) e.preventDefault();
+
+      if (e.deltaY > 0) {
+        driveTimeline("down", WHEEL_STEP);
+      } else if (e.deltaY < 0) {
+        driveTimeline("up", WHEEL_STEP);
+      }
+    };
+
+    const onTouchStart = (e) => {
+      narrativeTouchStartY.current = e.touches[0].clientY;
+    };
+
+    const onTouchMove = (e) => {
+      if (!narrativeIsInView.current) return;
+
+      const delta = narrativeTouchStartY.current - e.touches[0].clientY;
+
+      if (Math.abs(delta) < 10) return;
+
+      const p = narrativeTargetProgress.current;
+      if (p > 0 && p < 1) e.preventDefault();
+
+      if (delta > 0) {
+        driveTimeline("down", TOUCH_STEP);
+      } else {
+        driveTimeline("up", TOUCH_STEP);
+      }
+
+      narrativeTouchStartY.current = e.touches[0].clientY;
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      tl.kill();
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const handleCarouselMouseEnter = () => {
     setIsPaused(true);
     if (timelineRef.current) {
@@ -355,7 +524,18 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
         <div className="absolute inset-0 bg-linear-to-br from-black/20 via-transparent to-black/30"></div>
 
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-26 items-center relative z-10">
-          <HeroNarrative titleRef={titleRef} />
+          <HeroNarrative
+            titleRef={titleRef}
+            images={{
+              left: card1,
+              right: card2,
+              center: card3,
+            }}
+            sectionRef={narrativeSectionRef}
+            leftRef={narrativeLeftRef}
+            rightRef={narrativeRightRef}
+            centerRef={narrativeCenterRef}
+          />
 
           <HeroShowcase
             slides={HERO_SLIDES}
