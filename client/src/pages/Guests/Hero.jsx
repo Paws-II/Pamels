@@ -85,6 +85,8 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
   const narrativeIsComplete = useRef(false);
   const narrativeTargetProgress = useRef(0);
   const narrativeTouchStartY = useRef(0);
+  const nextSectionImageRef = useRef(null);
+
   const WHEEL_STEP = 0.035;
   const TOUCH_STEP = 0.06;
 
@@ -370,7 +372,7 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
         narrativeRightRef.current,
         narrativeCenterRef.current,
       ],
-      { y: "+=380", duration: 2, ease: "power2.out" }
+      { y: "+=590", duration: 2, ease: "power2.out" }
     );
 
     narrativeTlRef.current = tl;
@@ -520,39 +522,51 @@ const Hero = ({ activeIndex, setActiveIndex, onThemeChange }) => {
       ref={heroSectionRef}
       className="min-h-screen text-[#bfc0d1] overflow-x-hidden transition-colors duration-1000"
     >
-      <section className="relative min-h-screen flex items-center pt-20 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-br from-black/20 via-transparent to-black/30"></div>
+      <section
+        ref={heroSectionRef}
+        className="
+    relative
+    min-h-[200vh]   /* IMPORTANT: taller than viewport */
+    text-[#bfc0d1]
+    overflow-hidden
+  "
+      >
+        {/* FIRST VIEWPORT */}
+        <div className="min-h-screen flex items-center pt-20 px-6">
+          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-26 items-center">
+            <HeroNarrative
+              titleRef={titleRef}
+              images={{
+                left: card1,
+                right: card2,
+                center: card3,
+              }}
+              sectionRef={narrativeSectionRef}
+              leftRef={narrativeLeftRef}
+              rightRef={narrativeRightRef}
+              centerRef={narrativeCenterRef}
+            />
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-26 items-center relative z-10">
-          <HeroNarrative
-            titleRef={titleRef}
-            images={{
-              left: card1,
-              right: card2,
-              center: card3,
-            }}
-            sectionRef={narrativeSectionRef}
-            leftRef={narrativeLeftRef}
-            rightRef={narrativeRightRef}
-            centerRef={narrativeCenterRef}
-          />
+            <HeroShowcase
+              slides={HERO_SLIDES}
+              activeIndex={activeIndex}
+              cardRefs={cardRefs}
+              carouselContainerRef={carouselContainerRef}
+              states={states}
+              onCarouselMouseEnter={handleCarouselMouseEnter}
+              onCarouselMouseLeave={handleCarouselMouseLeave}
+              onActiveCardMouseEnter={handleActiveCardMouseEnter}
+              onActiveCardMouseMove={handleActiveCardMouseMove}
+              onActiveCardMouseLeave={handleActiveCardMouseLeave}
+            />
+          </div>
+        </div>
 
-          <HeroShowcase
-            slides={HERO_SLIDES}
-            activeIndex={activeIndex}
-            cardRefs={cardRefs}
-            carouselContainerRef={carouselContainerRef}
-            states={states}
-            onCarouselMouseEnter={handleCarouselMouseEnter}
-            onCarouselMouseLeave={handleCarouselMouseLeave}
-            onActiveCardMouseEnter={handleActiveCardMouseEnter}
-            onActiveCardMouseMove={handleActiveCardMouseMove}
-            onActiveCardMouseLeave={handleActiveCardMouseLeave}
-          />
+        {/* SECOND VIEWPORT — SAME SECTION */}
+        <div className="min-h-screen">
+          <NextSection />
         </div>
       </section>
-
-      <NextSection />
     </div>
   );
 };
