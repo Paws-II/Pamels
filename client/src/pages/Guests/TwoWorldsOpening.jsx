@@ -306,7 +306,7 @@ const TwoWorldsOpening = () => {
         }}
       />
 
-      <div className="content-section py-2 px-5 relative overflow-hidden z-10">
+      <div className="content-section pt-2 pb-0 px-5 relative overflow-hidden z-10">
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -333,7 +333,14 @@ const TwoWorldsOpening = () => {
 
         {cardImages.map((card, index) => (
           <React.Fragment key={index}>
-            <div className="card-row flex justify-center items-center gap-[clamp(30px,6vw,80px)] my-[clamp(180px,22vh,280px)] px-5">
+            <div
+              className={`card-row flex justify-center items-center gap-[clamp(30px,6vw,80px)] px-5
+  ${
+    index === cardImages.length - 1
+      ? "mt-[clamp(180px,22vh,280px)] mb-[80px]"
+      : "my-[clamp(180px,22vh,280px)]"
+  }`}
+            >
               <div
                 className="card-left w-[clamp(260px,38vw,440px)] aspect-[5/4]
  rounded-[32px] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.5)] border border-white/20 relative group"
@@ -404,21 +411,6 @@ const TwoWorldsOpening = () => {
                   }}
                 />
                 <h2 className="scroll-heading heading-cinematic relative z-10">
-                  A moment is all it takes.
-                </h2>
-              </div>
-            )}
-            {index === 3 && (
-              <div className="scroll-heading-wrapper my-[clamp(140px,18vh,220px)] flex justify-center items-center relative">
-                <div
-                  className="absolute w-[600px] h-[600px] rounded-full pointer-events-none opacity-30"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(120,160,200,0.4) 0%, rgba(160,210,255,0.2) 30%, transparent 70%)",
-                    filter: "blur(60px)",
-                  }}
-                />
-                <h2 className="scroll-heading heading-ethereal relative z-10">
                   A moment is all it takes.
                 </h2>
               </div>

@@ -139,7 +139,7 @@ const DoDont = () => {
               isDo ? "text-blue-400" : "text-red-400"
             }`}
           >
-            {isDo ? "do" : "don't"}
+            {isDo ? "do's" : "don'ts"}
           </span>{" "}
           care for animals.
         </h2>

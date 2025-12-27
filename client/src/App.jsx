@@ -4,6 +4,8 @@ import Navbar from "./pages/Guests/Navbar";
 import TwoWorldsOpening from "./pages/Guests/TwoWorldsOpening";
 import HowItWorks from "./pages/Guests/HowItWorks";
 import DoDont from "./pages/Guests/DoDont";
+import Stories from "./pages/Guests/Stroies";
+import Conclusion from "./pages/Guests/Conclusion";
 
 const App = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,6 +40,9 @@ const App = () => {
       <HowItWorks />
 
       <DoDont />
+
+      <Stories />
+      <Conclusion />
     </div>
   );
 };
