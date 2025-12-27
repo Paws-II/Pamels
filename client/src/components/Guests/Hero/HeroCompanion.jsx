@@ -138,11 +138,12 @@ const HeroCompanion = () => {
 
       <div
         className="
-          absolute bottom-0 left-0 w-full h-[45%]
-          bg-[linear-gradient(180deg,transparent,#03070c_90%)]
-
-          pointer-events-none
-        "
+    absolute bottom-0 left-0 w-full
+    h-[60%] sm:h-[50%] md:h-[45%] lg:h-[40%] xl:h-[35%]
+    max-h-[520px]
+    bg-[linear-gradient(180deg,transparent,#03070c_90%)]
+    pointer-events-none
+  "
       />
 
       <div className="relative z-10 min-h-screen flex flex-col pt-14">
@@ -191,7 +192,7 @@ const HeroCompanion = () => {
           </div>
 
           <div ref={imageCardRef} className="flex justify-center">
-            <div
+            {/* <div
               className="
                 relative rounded-3xl
                 border border-white/30
@@ -200,18 +201,18 @@ const HeroCompanion = () => {
                 shadow-[0_12px_80px_rgba(160,210,255,0.25)]
                 overflow-hidden
               "
-            >
-              {/* <div className="w-[320px] md:w-[420px] h-[400px] md:h-[500px] bg-linear-to-br from-blue-300/20 via-purple-300/20 to-pink-300/20 flex items-center justify-center text-white/70">
+            > */}
+            {/* <div className="w-[320px] md:w-[420px] h-[400px] md:h-[500px] bg-linear-to-br from-blue-300/20 via-purple-300/20 to-pink-300/20 flex items-center justify-center text-white/70">
                 <div className="text-center">
                   <p>Companion Moment</p>
                 </div>
               </div> */}
 
-              <div className="absolute top-4 left-4 w-12 h-12 border-t-2 border-l-2 border-white/60 rounded-tl-2xl" />
+            {/* <div className="absolute top-4 left-4 w-12 h-12 border-t-2 border-l-2 border-white/60 rounded-tl-2xl" />
               <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-white/60 rounded-tr-2xl" />
               <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-white/60 rounded-bl-2xl" />
-              <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-white/60 rounded-br-2xl" />
-            </div>
+              <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-white/60 rounded-br-2xl" /> */}
+            {/* </div> */}
           </div>
         </div>
       </div>

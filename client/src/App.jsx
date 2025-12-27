@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Hero from "./pages/Guests/Hero";
 import Navbar from "./pages/Guests/Navbar";
-import Demo from "./pages/Guests/Demo";
+import TwoWorldsOpening from "./pages/Guests/TwoWorldsOpening";
 
 const App = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,7 +31,7 @@ const App = () => {
         onThemeChange={setThemeIndex}
       />
 
-      <Demo />
+      <TwoWorldsOpening />
     </div>
   );
 };
