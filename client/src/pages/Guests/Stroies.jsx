@@ -1,6 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import { Quote } from "lucide-react";
 
+import hachi from "../../assets/stories/hachi.png";
+import luna from "../../assets/stories/luna.png";
+import bruno from "../../assets/stories/bruno.png";
+import miso from "../../assets/stories/miso.png";
+import shadow from "../../assets/stories/shadow.png";
+import willow from "../../assets/stories/willow.png";
+
 const Stories = () => {
   const containerParentRef = useRef(null);
   const containerRef = useRef(null);
@@ -12,48 +19,42 @@ const Stories = () => {
       adjective: "Faithful",
       story: `He waited by the door every evening. Not because he was taught to — but because once, someone came back. Time passed, and the door stayed quiet. Still, he returned to the same spot, day after day. Hope, for him, wasn't loud or desperate. It was patient. It was faithful. It was simply believing that waiting still mattered.`,
       backgroundColor: "#1a2942",
-      image:
-        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200&q=80",
+      image: hachi,
     },
     {
       name: "Luna",
       adjective: "Gentle",
       story: `For weeks, she wouldn't meet anyone's eyes. Every sound made her flinch. Every movement felt like too much. One night, she rested her head on a knee. Just for a moment. That was all the trust she had — and it was enough. No one moved. No one spoke. And in that stillness, something began to heal.`,
       backgroundColor: "#2d1f1a",
-      image:
-        "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=1200&q=80",
+      image: luna,
     },
     {
       name: "Bruno",
       adjective: "Brave",
       story: `He used to pull away from every touch. Hands meant uncertainty. Closeness felt like danger. Then one day, he didn't step back. Nothing dramatic happened. No moment worth announcing. Just a quiet pause — and a choice to stay. Nothing changed — except how safe he felt.`,
       backgroundColor: "#1a3833",
-      image:
-        "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200&q=80",
+      image: bruno,
     },
     {
       name: "Miso",
       adjective: "Calm",
       story: `She learned the sound of quiet footsteps. The kind that don't rush. The kind that don't demand attention. At first, she watched from a distance. Then she stopped hiding. Not to run — but to stay. Some bonds don't begin with excitement. They begin with silence that feels kind.`,
       backgroundColor: "#3d2d26",
-      image:
-        "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=1200&q=80",
+      image: miso,
     },
     {
       name: "Shadow",
       adjective: "Steady",
       story: `He slept facing the door every night. Not guarding — just waiting. Listening to the world beyond the walls. He didn't ask for reassurance. He didn't need promises. He just needed to know that leaving didn't always mean loss. Some connections don't need words. They just need consistency.`,
       backgroundColor: "#1f2838",
-      image:
-        "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=1200&q=80",
+      image: shadow,
     },
     {
       name: "Willow",
       adjective: "Patient",
       story: `She followed slowly, always a step behind. Never pulling ahead. Never asking for more than she was ready for. Days passed. The distance stayed — until it didn't. One morning, she walked beside them instead. No signal. No celebration. Just trust catching up at its own pace. Trust doesn't rush.`,
       backgroundColor: "#2a2228",
-      image:
-        "https://images.unsplash.com/photo-1552053831-71594a27632d?w=1200&q=80",
+      image: willow,
     },
   ];
 
