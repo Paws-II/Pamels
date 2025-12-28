@@ -70,6 +70,8 @@ const Stories = () => {
 
     document.body.appendChild(gsapScript);
 
+    let setHeight;
+
     gsapScript.onload = () => {
       document.body.appendChild(scrollTriggerScript);
 
@@ -77,37 +79,53 @@ const Stories = () => {
         const { gsap } = window;
         const { ScrollTrigger } = window;
 
+        if (!gsap || !ScrollTrigger) return;
+
         gsap.registerPlugin(ScrollTrigger);
 
+        const parent = containerParentRef.current;
         const container = containerRef.current;
-        if (!container) return;
+        const sticky = stickySectionRef.current;
 
-        const getScrollAmount = () => {
-          return -(container.scrollWidth - window.innerWidth);
+        if (!parent || !container || !sticky) return;
+
+        setHeight = () => {
+          const scrollDistance = container.scrollWidth - window.innerWidth;
+          parent.style.height = `${scrollDistance + window.innerHeight}px`;
+          ScrollTrigger.refresh();
         };
 
+        setHeight();
+        window.addEventListener("resize", setHeight);
+
         gsap.to(container, {
-          x: getScrollAmount,
+          x: () => -(container.scrollWidth - window.innerWidth),
           ease: "none",
           scrollTrigger: {
-            trigger: containerParentRef.current,
+            trigger: parent,
             start: "top top",
             end: () => `+=${container.scrollWidth - window.innerWidth}`,
             scrub: 1,
-            pin: stickySectionRef.current,
+            pin: sticky,
             anticipatePin: 1,
             invalidateOnRefresh: true,
           },
         });
-
-        return () => {
-          ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-        };
       };
     };
 
     return () => {
-      document.body.removeChild(gsapScript);
+      if (setHeight) {
+        window.removeEventListener("resize", setHeight);
+      }
+
+      if (window.ScrollTrigger) {
+        window.ScrollTrigger.getAll().forEach((t) => t.kill());
+      }
+
+      if (document.body.contains(gsapScript)) {
+        document.body.removeChild(gsapScript);
+      }
       if (document.body.contains(scrollTriggerScript)) {
         document.body.removeChild(scrollTriggerScript);
       }
@@ -155,12 +173,7 @@ const Stories = () => {
         </p>
       </div>
 
-      <section
-        ref={containerParentRef}
-        style={{
-          height: `${stories.length * 120}vh`,
-        }}
-      >
+      <section ref={containerParentRef}>
         <div
           ref={stickySectionRef}
           style={{
