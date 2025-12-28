@@ -8,6 +8,7 @@ import Stories from "./pages/Guests/Stroies";
 import Conclusion from "./pages/Guests/Conclusion";
 import Faq from "./pages/Guests/Faq";
 import Testimonials from "./pages/Guests/Testimonials";
+import Footer from "./pages/Guests/Footer";
 
 const App = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,6 +48,7 @@ const App = () => {
       <Conclusion />
       <Testimonials />
       <Faq />
+      <Footer />
     </div>
   );
 };

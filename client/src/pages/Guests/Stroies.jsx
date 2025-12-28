@@ -83,6 +83,7 @@ const Stories = () => {
         if (!gsap || !ScrollTrigger) return;
 
         gsap.registerPlugin(ScrollTrigger);
+        ScrollTrigger.normalizeScroll(true);
 
         const parent = containerParentRef.current;
         const container = containerRef.current;
@@ -208,14 +209,9 @@ const Stories = () => {
                   backgroundColor: story.backgroundColor,
                   boxShadow:
                     "0 40px 80px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-                  transition: "transform 0.3s ease",
+
+                  transform: "translateZ(0)",
                   cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.02)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
                 }}
               >
                 <div
@@ -354,6 +350,16 @@ const Stories = () => {
                       {story.name.toLowerCase()}
                     </span>
                   </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "clamp(20px, 3vw, 40px)",
+                      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
+                      pointerEvents: "none",
+                    }}
+                  />
                 </div>
               </div>
             ))}

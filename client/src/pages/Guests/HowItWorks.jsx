@@ -183,14 +183,13 @@ const HowItWorks = () => {
           style={{
             position: "relative",
             display: "inline-block",
-            padding: "32px 56px",
+            padding: "26px 44px",
             background:
-              "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
-            backdropFilter: "blur(20px)",
-            borderRadius: "24px",
-            border: "2px solid rgba(255,255,255,0.2)",
+              "linear-gradient(180deg, rgba(37,99,235,0.25), rgba(15,23,42,0.85))",
+            borderRadius: "18px",
+            border: "1px solid rgba(147,197,253,0.22)",
             boxShadow:
-              "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)",
+              "0 16px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(147,197,253,0.18)",
           }}
         >
           <div
