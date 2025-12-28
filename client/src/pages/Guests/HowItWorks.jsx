@@ -1,5 +1,13 @@
 import React, { useEffect, useRef } from "react";
-import { Heart, Home, Video, Search, FileText, Dog } from "lucide-react";
+import {
+  Heart,
+  Home,
+  Video,
+  Search,
+  FileText,
+  Dog,
+  ArrowDown,
+} from "lucide-react";
 
 const HowItWorks = () => {
   const sectionRef = useRef(null);
@@ -171,20 +179,140 @@ const HowItWorks = () => {
           pointerEvents: "none",
         }}
       >
-        <h2
+        <div
           style={{
-            fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
-            fontWeight: 800,
-            fontFamily: "'Space Grotesk', sans-serif",
-            color: "white",
-            marginBottom: "16px",
+            position: "relative",
+            display: "inline-block",
+            padding: "32px 56px",
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "24px",
+            border: "2px solid rgba(255,255,255,0.2)",
+            boxShadow:
+              "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)",
           }}
         >
-          How WhisperTails Works
-        </h2>
+          {/* Animated gradient border glow */}
+          <div
+            style={{
+              position: "absolute",
+              inset: "-3px",
+              background:
+                "linear-gradient(135deg, rgba(59,130,246,0.4), rgba(147,51,234,0.4), rgba(236,72,153,0.4), rgba(59,130,246,0.4))",
+              borderRadius: "26px",
+              opacity: 0.6,
+              filter: "blur(8px)",
+              zIndex: -1,
+              animation: "rotate 8s linear infinite",
+            }}
+          />
+
+          {/* Corner accents */}
+          <div
+            style={{
+              position: "absolute",
+              top: "12px",
+              left: "12px",
+              width: "40px",
+              height: "40px",
+              borderTop: "3px solid rgba(59,130,246,0.6)",
+              borderLeft: "3px solid rgba(59,130,246,0.6)",
+              borderRadius: "8px 0 0 0",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+              width: "40px",
+              height: "40px",
+              borderTop: "3px solid rgba(147,51,234,0.6)",
+              borderRight: "3px solid rgba(147,51,234,0.6)",
+              borderRadius: "0 8px 0 0",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "12px",
+              left: "12px",
+              width: "40px",
+              height: "40px",
+              borderBottom: "3px solid rgba(236,72,153,0.6)",
+              borderLeft: "3px solid rgba(236,72,153,0.6)",
+              borderRadius: "0 0 0 8px",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "12px",
+              right: "12px",
+              width: "40px",
+              height: "40px",
+              borderBottom: "3px solid rgba(59,130,246,0.6)",
+              borderRight: "3px solid rgba(59,130,246,0.6)",
+              borderRadius: "0 0 8px 0",
+            }}
+          />
+
+          <h2
+            style={{
+              fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
+              fontWeight: 800,
+              fontFamily: "'Space Grotesk', sans-serif",
+              background:
+                "linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #ffffff 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: "0",
+              position: "relative",
+            }}
+          >
+            How Whisper Tails Works
+          </h2>
+
+          <div
+            style={{
+              marginTop: "28px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
+              pointerEvents: "auto",
+              opacity: 0.85,
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.7rem",
+                letterSpacing: "0.35em",
+                textTransform: "uppercase",
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.75)",
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
+            >
+              Scroll
+            </span>
+
+            <ArrowDown
+              size={28}
+              strokeWidth={2}
+              style={{
+                color: "white",
+                animation: "scrollHint 1.8s ease-in-out infinite",
+                filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))",
+              }}
+            />
+          </div>
+        </div>
       </div>
 
-      <div style={{ height: "120vh" }} />
+      <div style={{ height: "90vh" }} />
 
       <div
         style={{
