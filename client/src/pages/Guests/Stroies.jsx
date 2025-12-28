@@ -83,7 +83,6 @@ const Stories = () => {
         if (!gsap || !ScrollTrigger) return;
 
         gsap.registerPlugin(ScrollTrigger);
-        ScrollTrigger.normalizeScroll(true);
 
         const parent = containerParentRef.current;
         const container = containerRef.current;
@@ -92,8 +91,16 @@ const Stories = () => {
         if (!parent || !container || !sticky) return;
 
         setHeight = () => {
-          const scrollDistance = container.scrollWidth - window.innerWidth;
-          parent.style.height = `${scrollDistance + window.innerHeight}px`;
+          const rawDistance = container.scrollWidth - window.innerWidth;
+
+          const scrollDistance = Math.max(rawDistance, window.innerWidth * 0.8);
+
+          const buffer = window.innerHeight * 1.5;
+
+          parent.style.height = `${
+            scrollDistance + window.innerHeight + buffer
+          }px`;
+
           ScrollTrigger.refresh();
         };
 
@@ -106,11 +113,19 @@ const Stories = () => {
           scrollTrigger: {
             trigger: parent,
             start: "top top",
-            end: () => `+=${container.scrollWidth - window.innerWidth}`,
+            end: () =>
+              `+=${
+                container.scrollWidth -
+                window.innerWidth +
+                window.innerHeight * 0.5
+              }`,
             scrub: 1,
             pin: sticky,
             anticipatePin: 1,
             invalidateOnRefresh: true,
+
+            pinSpacing: true,
+            fastScrollEnd: false,
           },
         });
       };
