@@ -10,51 +10,73 @@ const HowItWorks = () => {
       title: "Choose Your Pet",
       description: "Find the one that steals your heart",
       icon: Dog,
-
-      gradient:
-        "radial-gradient(circle at 30% 30%, #2e3a8c 0%, #141a3a 45%, #070b1f 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #facc15 0%,
+        #f59e0b 45%,
+        #78350f 100%)
+    `,
     },
     {
       id: 2,
       title: "Submit Your Application",
       description: "Tell us why you're the perfect match",
       icon: FileText,
-
-      gradient:
-        "radial-gradient(circle at 30% 30%, #4b2f6b 0%, #251533 55%, #0f0815 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #38bdf8 0%,
+        #0284c7 50%,
+        #020617 100%)
+    `,
     },
     {
       id: 3,
       title: "Application Review",
       description: "We verify details to ensure a safe home",
       icon: Search,
-
-      gradient:
-        "radial-gradient(circle at 30% 30%, #1f6b8f 0%, #0b2c3d 50%, #050f16 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #a78bfa 0%,
+        #6d28d9 50%,
+        #2e1065 100%)
+    `,
     },
     {
       id: 4,
       title: "Video Verification",
       description: "A quick face-to-face to build trust",
       icon: Video,
-      gradient:
-        "radial-gradient(circle at 30% 30%, #1f5f4a 0%, #0f2f25 55%, #071611 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #3f3f46 0%,
+        #18181b 45%,
+        #09090b 75%,
+        #000000 100%)
+    `,
     },
     {
       id: 5,
       title: "Home Visit",
       description: "Because every pet deserves the right space",
       icon: Home,
-      gradient:
-        "radial-gradient(circle at 30% 30%, #2a2e35 0%, #14171c 55%, #080a0e 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #10b981 0%,
+        #065f46 55%,
+        #022c22 100%)
+    `,
     },
     {
       id: 6,
       title: "Welcome Them Home",
       description: "Done. Your forever companion is yours",
       icon: Heart,
-      gradient:
-        "radial-gradient(circle at 30% 30%, #6b1f2c 0%, #2f0f15 55%, #160709 100%)",
+      gradient: `
+      radial-gradient(circle at 30% 30%,
+        #ff3b3b 0%,
+        #a00000 55%,
+        #3a0000 100%)
+    `,
     },
   ];
 
@@ -162,7 +184,7 @@ const HowItWorks = () => {
         </h2>
       </div>
 
-      <div style={{ height: "240vh" }} />
+      <div style={{ height: "120vh" }} />
 
       <div
         style={{
@@ -235,68 +257,140 @@ const HowItWorks = () => {
                     flexDirection: window.innerWidth < 768 ? "column" : "row",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "clamp(2.5rem, 5vw, 4rem)",
-                    gap: "32px",
+                    padding: "clamp(2.8rem, 5.5vw, 4.2rem)",
+                    gap: "48px",
                     minHeight: "inherit",
                   }}
                 >
-                  <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ flex: 1 }}>
                     <div
                       style={{
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontWeight: 600,
-                        marginBottom: "16px",
-                        fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-                        letterSpacing: "0.15em",
-                        fontFamily: "'Space Grotesk', sans-serif",
+                        display: "flex",
+                        gap: "32px",
+                        alignItems: "flex-start",
                       }}
                     >
-                      STEP {step.id}
+                      <div
+                        style={{
+                          width: "2px",
+                          height: "140px",
+                          background:
+                            "linear-gradient(to bottom, rgba(255,255,255,0.45), rgba(255,255,255,0.05))",
+                          borderRadius: "2px",
+                          marginTop: "6px",
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      <div>
+                        <div
+                          style={{
+                            display: "inline-block",
+                            position: "relative",
+                            marginBottom: "24px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "0.7rem",
+                              letterSpacing: "0.35em",
+                              textTransform: "uppercase",
+                              fontWeight: 800,
+                              fontFamily: "'Space Grotesk', sans-serif",
+                              background: "rgba(255,255,255,0.12)",
+                              backdropFilter: "blur(10px)",
+                              padding: "10px 20px",
+                              borderRadius: "100px",
+                              border: "1px solid rgba(255,255,255,0.25)",
+                              boxShadow:
+                                "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+                              color: "rgba(255,255,255,0.95)",
+                              textShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                              display: "inline-block",
+                            }}
+                          >
+                            STEP {step.id}
+                          </div>
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: "-2px",
+                              background:
+                                "linear-gradient(135deg, rgba(255,255,255,0.3), transparent 50%, rgba(255,255,255,0.1))",
+                              borderRadius: "100px",
+                              opacity: 0.4,
+                              pointerEvents: "none",
+                              zIndex: -1,
+                            }}
+                          />
+                        </div>
+
+                        <h3
+                          style={{
+                            fontSize: "clamp(2.6rem, 5vw, 4.2rem)",
+                            fontWeight: 900,
+                            lineHeight: 0.98,
+                            letterSpacing: "-0.03em",
+                            marginBottom: "32px",
+                            fontFamily: "'Space Grotesk', sans-serif",
+                            textShadow:
+                              "0 4px 20px rgba(0,0,0,0.6), 0 12px 40px rgba(0,0,0,0.4)",
+                            color: "rgba(255,255,255,0.98)",
+                          }}
+                        >
+                          {step.title}
+                        </h3>
+
+                        <p
+                          style={{
+                            maxWidth: "40ch",
+                            fontSize: "1.15rem",
+                            lineHeight: 1.7,
+                            fontWeight: 400,
+                            color: "rgba(255,255,255,0.92)",
+                            fontFamily: "'Inter', sans-serif",
+                            textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                            letterSpacing: "0.002em",
+                            position: "relative",
+                            paddingLeft: "24px",
+                            borderLeft: "3px solid rgba(255,255,255,0.25)",
+                            background:
+                              "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, transparent 100%)",
+                            padding: "20px 24px",
+                            borderRadius: "8px",
+                            backdropFilter: "blur(4px)",
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          {step.description}
+                        </p>
+                      </div>
                     </div>
-                    <h3
-                      style={{
-                        color: "white",
-                        fontWeight: 700,
-                        marginBottom: "20px",
-                        fontSize: "clamp(2rem, 4.5vw, 3.5rem)",
-                        lineHeight: 1.15,
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        textShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                      }}
-                    >
-                      {step.title}
-                    </h3>
-                    <p
-                      style={{
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontSize: "clamp(1.05rem, 2.3vw, 1.4rem)",
-                        lineHeight: 1.6,
-                        fontFamily: "'Inter', sans-serif",
-                        maxWidth: "550px",
-                      }}
-                    >
-                      {step.description}
-                    </p>
                   </div>
-                  <div className="card-icon" style={{ flexShrink: 0 }}>
+
+                  <div style={{ flexShrink: 0 }}>
                     <div
                       style={{
-                        width: "clamp(90px, 16vw, 150px)",
-                        height: "clamp(90px, 16vw, 150px)",
+                        width: "clamp(110px, 18vw, 180px)",
+                        height: "clamp(110px, 18vw, 180px)",
                         borderRadius: "50%",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "rgba(255,255,255,0.15)",
-                        backdropFilter: "blur(10px)",
+                        background: "rgba(255,255,255,0.18)",
+                        backdropFilter: "blur(20px)",
                         boxShadow:
-                          "0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)",
+                          "0 16px 50px rgba(0,0,0,0.45), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
+                        border: "1px solid rgba(255,255,255,0.2)",
                       }}
                     >
                       <Icon
-                        size={window.innerWidth < 768 ? 44 : 64}
-                        strokeWidth={1.5}
-                        style={{ color: "white" }}
+                        size={window.innerWidth < 768 ? 50 : 72}
+                        strokeWidth={1.8}
+                        style={{
+                          color: "white",
+                          filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+                        }}
                       />
                     </div>
                   </div>
