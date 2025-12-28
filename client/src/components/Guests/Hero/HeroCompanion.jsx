@@ -1,6 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SnowFall from "react-snowfall";
+import moonImg from "../../../assets/Guests/moon.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -10,30 +12,19 @@ const HeroCompanion = () => {
   const dividerRef = useRef(null);
   const textBoxRef = useRef(null);
   const imageCardRef = useRef(null);
+  const moonRef = useRef(null);
+  const [showSnow, setShowSnow] = useState(false);
 
   useEffect(() => {
+    let snowTrigger;
+    let moonGlow;
+
     const ctx = gsap.context(() => {
-      gsap.set(headingRef.current, {
-        opacity: 0,
-        y: -60,
-      });
-
-      gsap.set(dividerRef.current, {
-        opacity: 0,
-        scaleX: 0,
-      });
-
-      gsap.set(textBoxRef.current, {
-        opacity: 0,
-        x: -80,
-        y: 40,
-      });
-
-      gsap.set(imageCardRef.current, {
-        opacity: 0,
-        x: 80,
-        y: 40,
-      });
+      gsap.set(headingRef.current, { opacity: 0, y: -60 });
+      gsap.set(dividerRef.current, { opacity: 0, scaleX: 0 });
+      gsap.set(textBoxRef.current, { opacity: 0, x: -80, y: 40 });
+      gsap.set(imageCardRef.current, { opacity: 0, x: 80, y: 40 });
+      gsap.set(moonRef.current, { opacity: 0, y: -80, scale: 0.92 });
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -41,58 +32,32 @@ const HeroCompanion = () => {
           start: "top 60%",
           end: "top 10%",
           scrub: 1.2,
-          toggleActions: "play none none reverse",
         },
       });
 
-      tl.to(
-        headingRef.current,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-        },
-        0
-      );
+      tl.to(headingRef.current, { opacity: 1, y: 0, duration: 0.8 }, 0)
+        .to(dividerRef.current, { opacity: 0.7, scaleX: 1, duration: 0.6 }, 0.3)
+        .to(textBoxRef.current, { opacity: 1, x: 0, y: 0, duration: 1 }, 0.6)
+        .to(imageCardRef.current, { opacity: 1, x: 0, y: 0, duration: 1 }, 0.7)
+        .to(
+          moonRef.current,
+          { opacity: 0.35, y: 0, scale: 1, duration: 0.9 },
+          0
+        );
 
-      tl.to(
-        dividerRef.current,
-        {
-          opacity: 0.7,
-          scaleX: 1,
-          duration: 0.6,
-          ease: "power2.out",
-        },
-        0.3
-      );
-
-      tl.to(
-        textBoxRef.current,
-        {
-          opacity: 1,
-          x: 0,
-          y: 0,
-          duration: 1,
-          ease: "power2.out",
-        },
-        0.6
-      );
-
-      tl.to(
-        imageCardRef.current,
-        {
-          opacity: 1,
-          x: 0,
-          y: 0,
-          duration: 1,
-          ease: "power2.out",
-        },
-        0.7
-      );
+      snowTrigger = ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top 55%",
+        onEnter: () => setShowSnow(true),
+        onLeaveBack: () => setShowSnow(false),
+      });
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      snowTrigger?.kill();
+
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -105,6 +70,8 @@ const HeroCompanion = () => {
 
       "
     >
+      {showSnow && <SnowFall color="#82C3D9" snowflakeCount={220} />}
+
       <div
         className="
           absolute top-[-15%] left-1/2 -translate-x-1/2
@@ -119,6 +86,36 @@ const HeroCompanion = () => {
           animation: "pulse 6s ease-in-out infinite",
         }}
       />
+
+      <div
+        ref={moonRef}
+        className="
+    absolute top-[4%] left-1/2 -translate-x-1/2
+    pointer-events-none
+    z-[2]
+  "
+      >
+        <img
+          src={moonImg}
+          alt="Moon"
+          className="
+      w-[240px] md:w-[320px] lg:w-[380px]
+
+      opacity-90
+      drop-shadow-[0_0_35px_rgba(200,230,255,0.55)]
+    "
+          style={{
+            filter:
+              "brightness(1.05) contrast(1.05) drop-shadow(0 0 60px rgba(190,220,255,0.35))",
+          }}
+        />
+      </div>
+
+      <div className="absolute inset-0 pointer-events-none z-[3] overflow-hidden">
+        <div className="cloud cloud-1" />
+        <div className="cloud cloud-2" />
+      </div>
+
       <div
         className="
     absolute inset-0
@@ -222,6 +219,43 @@ const HeroCompanion = () => {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.7; }
         }
+
+        .cloud {
+  position: absolute;
+  top: 14%;
+  width: 140%;
+  height: 260px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.05),
+    transparent 75%
+  );
+  filter: blur(28px);
+  opacity: 0.6;
+}
+
+
+.cloud-1 {
+  animation: cloudMove 70s linear infinite;
+}
+
+.cloud-2 {
+  top: 26%;
+  animation: cloudMove 95s linear infinite reverse;
+}
+
+
+@keyframes cloudMove {
+  from {
+    transform: translateX(-20%);
+  }
+  to {
+    transform: translateX(20%);
+  }
+}
+
       `}</style>
     </div>
   );
