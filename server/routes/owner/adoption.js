@@ -16,8 +16,13 @@ router.get("/pets/:petId", adoptionController.getPetDetails);
 router.post("/apply", adoptionController.submitApplication);
 router.get("/my-applications", adoptionController.getMyApplications);
 router.get(
-  "/rejected/:applicationId",
-  adoptionController.getRejectedApplicationDetails
+  "/application/:applicationId",
+  adoptionController.getApplicationDetail
+);
+router.get("/archived", adoptionController.getArchivedApplications);
+router.delete(
+  "/application/:applicationId/delete",
+  adoptionController.deleteApplication
 );
 router.post("/withdraw/:applicationId", adoptionController.withdrawApplication);
 export default router;

@@ -34,19 +34,33 @@ const RejectedApplicationDetail = () => {
   const fetchRejectedApplication = async () => {
     try {
       setLoading(true);
+      setError("");
+
       const res = await axios.get(
-        `${API_URL}/api/owner/adoption/rejected/${applicationId}`,
+        `${API_URL}/api/owner/adoption/archived/${applicationId}`,
         { withCredentials: true }
       );
 
-      if (res.data.success) {
-        setApplication(res.data.data.application);
-        setPet(res.data.data.application.petId);
-        setShelter(res.data.data.shelterProfile);
+      if (!res.data?.success || !res.data?.data?.application) {
+        setError("Archived application not found");
+        return;
       }
+
+      const { application, shelterProfile } = res.data.data;
+      const petData =
+        typeof application.petId === "object" ? application.petId : null;
+
+      setApplication(application);
+      setPet(petData || null);
+      setShelter(shelterProfile || null);
     } catch (err) {
-      console.error("Fetch rejected application error:", err);
-      setError("Failed to load application details");
+      console.error("Fetch archived application error:", err);
+
+      if (err.response?.status === 404) {
+        setError("Archived application not found");
+      } else {
+        setError("Failed to load archived application details");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,7 +104,12 @@ const RejectedApplicationDetail = () => {
     return <FullPageError message="Application not found or already removed" />;
   }
 
-  const isRejected = application?.status === "rejected";
+  const isRejected = [
+    "rejected",
+    "application-reject",
+    "video-verification-reject",
+    "final-reject",
+  ].includes(application?.status);
   const displayImage = pet.coverImage || pet.images?.[0] || "";
 
   return (
@@ -158,8 +177,9 @@ const RejectedApplicationDetail = () => {
                     Application Not Approved
                   </h2>
                   <p className="text-sm text-red-300 mb-4 leading-relaxed">
-                    Unfortunately, the shelter was unable to approve your
-                    application at this time. Here's the reason provided:
+                    {application.status === "rejected"
+                      ? "Unfortunately, the shelter was unable to approve your application at this time. Here's the reason provided:"
+                      : "Your application has been rejected. Here's the reason:"}
                   </p>
                   <div className="rounded-lg bg-red-500/20 border border-red-500/30 p-4">
                     <p className="text-sm text-white leading-relaxed">

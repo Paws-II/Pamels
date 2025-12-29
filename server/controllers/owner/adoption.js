@@ -112,7 +112,6 @@ const adoptionController = {
           reason: null,
         };
 
-        // Check CheckPetStatus first
         if (petStatus?.activeOwnerId) {
           const activeOwnerIdStr = petStatus.activeOwnerId.toString();
 
@@ -385,7 +384,6 @@ const adoptionController = {
       });
 
       if (req.app.locals.io) {
-        // Owner socket
         req.app.locals.io.to(`user:${ownerId}`).emit("notification:new", {
           _id: ownerNotification._id,
           title: ownerNotification.title,
@@ -396,7 +394,6 @@ const adoptionController = {
           metadata: ownerNotification.metadata,
         });
 
-        // Shelter socket
         req.app.locals.io.to(`user:${pet.shelterId}`).emit("notification:new", {
           _id: shelterNotification._id,
           title: shelterNotification.title,
@@ -496,7 +493,6 @@ const adoptionController = {
       });
 
       if (req.app.locals.io) {
-        // Owner socket
         req.app.locals.io.to(`user:${ownerId}`).emit("notification:new", {
           _id: ownerNotification._id,
           title: ownerNotification.title,
@@ -507,7 +503,6 @@ const adoptionController = {
           metadata: ownerNotification.metadata,
         });
 
-        // Shelter socket
         req.app.locals.io
           .to(`user:${application.shelterId}`)
           .emit("notification:new", {
@@ -579,7 +574,7 @@ const adoptionController = {
     }
   },
 
-  getRejectedApplicationDetails: async (req, res) => {
+  getApplicationDetail: async (req, res) => {
     try {
       const { applicationId } = req.params;
       const ownerId = req.userId;
@@ -592,7 +587,176 @@ const adoptionController = {
         .populate("shelterId", "email")
         .lean();
 
-      let isRejected = false;
+      if (!application) {
+        return res.status(404).json({
+          success: false,
+          message: "Application not found",
+        });
+      }
+
+      const ShelterProfile = (
+        await import("../../models/profiles/ShelterProfile.js")
+      ).default;
+
+      const shelterProfile = await ShelterProfile.findOne({
+        shelterId: application.shelterId._id,
+      }).lean();
+
+      return res.json({
+        success: true,
+        data: {
+          application,
+          shelterProfile,
+          isArchived: false,
+        },
+      });
+    } catch (error) {
+      console.error("Fetch application detail error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch application details",
+      });
+    }
+  },
+
+  getArchivedApplications: async (req, res) => {
+    try {
+      const ownerId = req.userId;
+
+      const RejectedApplication = (
+        await import("../../models/adoption/RejectedApplication.js")
+      ).default;
+
+      const archivedApplications = await RejectedApplication.find({ ownerId })
+        .populate("petId", "name species breed images coverImage")
+        .populate("shelterId", "email")
+        .sort({ rejectedAt: -1 })
+        .lean();
+
+      return res.json({
+        success: true,
+        data: archivedApplications,
+        total: archivedApplications.length,
+      });
+    } catch (error) {
+      console.error("Get archived applications error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch archived applications",
+      });
+    }
+  },
+  deleteApplication: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const { applicationId } = req.params;
+      const ownerId = req.userId;
+
+      const application = await AdoptionApplication.findOne({
+        _id: applicationId,
+        ownerId,
+        status: "application-rejected",
+      }).session(session);
+
+      if (!application) {
+        await session.abortTransaction();
+        return res.status(404).json({
+          success: false,
+          message: "Application not found or cannot be deleted",
+        });
+      }
+
+      const pet = await PetProfile.findById(application.petId)
+        .session(session)
+        .lean();
+
+      const RejectedApplication = (
+        await import("../../models/adoption/RejectedApplication.js")
+      ).default;
+
+      const rejectedApp = new RejectedApplication({
+        ownerId: application.ownerId,
+        shelterId: application.shelterId,
+        petId: application.petId,
+        applicationData: application.applicationData,
+        status: "rejected",
+        rejectionReason: application.rejectionReason || "No reason provided",
+        shelterNotes: application.shelterNotes,
+        scheduledMeeting: application.scheduledMeeting,
+        paymentStatus: application.paymentStatus,
+        agreedToTerms: application.agreedToTerms,
+        submittedAt: application.submittedAt,
+        reviewedAt: application.reviewedAt || new Date(),
+        rejectedAt: new Date(),
+      });
+
+      await rejectedApp.save({ session });
+      await AdoptionApplication.findByIdAndDelete(applicationId).session(
+        session
+      );
+
+      await CheckPetStatus.findOneAndUpdate(
+        {
+          petId: application.petId,
+          applicationId: application._id,
+        },
+        {
+          activeOwnerId: null,
+          applicationId: null,
+        },
+        { session }
+      );
+
+      await session.commitTransaction();
+
+      if (req.app.locals.io) {
+        req.app.locals.io.to(`user:${ownerId}`).emit("application:archived", {
+          applicationId: rejectedApp._id,
+          petId: application.petId,
+          timestamp: Date.now(),
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Application archived successfully",
+        data: rejectedApp,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      console.error("Delete application error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to archive application",
+      });
+    } finally {
+      session.endSession();
+    }
+  },
+
+  getRejectedApplicationDetails: async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      const ownerId = req.userId;
+
+      let application = await AdoptionApplication.findOne({
+        _id: applicationId,
+        ownerId,
+        status: {
+          $in: [
+            "application-reject",
+            "video-verification-reject",
+            "final-reject",
+          ],
+        },
+      })
+        .populate("petId", "name species breed images coverImage")
+        .populate("shelterId", "email")
+        .lean();
+
+      let isRejected = true;
 
       if (!application) {
         const RejectedApplication = (
@@ -606,8 +770,6 @@ const adoptionController = {
           .populate("petId", "name species breed images coverImage")
           .populate("shelterId", "email")
           .lean();
-
-        isRejected = true;
       }
 
       if (!application) {

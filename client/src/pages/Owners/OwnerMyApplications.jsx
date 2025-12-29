@@ -15,11 +15,15 @@ import Navbar from "../../components/Owners/NavbarOwner";
 import NotificationBell from "../../Common/NotificationBell";
 import FullPageLoader from "../../Common/FullPageLoader";
 import FullPageError from "../../Common/FullPageError";
+import { useSocket } from "../../../hooks/useSocket";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const OwnerMyApplications = () => {
   const navigate = useNavigate();
+
+  const { on } = useSocket();
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +31,26 @@ const OwnerMyApplications = () => {
 
   useEffect(() => {
     fetchApplications();
+
+    const unsubscribe = on("application:status:updated", (data) => {
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id?.toString() === data.applicationId?.toString()
+            ? {
+                ...app,
+                status: data.status,
+                rejectionReason: data.rejectionReason,
+              }
+            : app
+        )
+      );
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const fetchApplications = async () => {
@@ -34,9 +58,7 @@ const OwnerMyApplications = () => {
       setLoading(true);
       const res = await axios.get(
         `${API_URL}/api/owner/adoption/my-applications`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
 
       if (res.data.success) {
@@ -83,7 +105,7 @@ const OwnerMyApplications = () => {
         icon: CheckCircle,
         label: "Approved",
       },
-      rejected: {
+      "application-rejected": {
         bg: "bg-red-500/20",
         text: "text-red-400",
         icon: XCircle,
@@ -96,6 +118,7 @@ const OwnerMyApplications = () => {
         label: "Withdrawn",
       },
     };
+
     return badges[status] || badges.submitted;
   };
 
@@ -107,17 +130,14 @@ const OwnerMyApplications = () => {
     });
   };
 
-  const handleViewApplication = async (app) => {
-    if (app.status === "rejected") {
-      navigate(`/applications-owner/rejected/${app._id}`);
-    } else {
-      // For future: navigate to general application detail page
-      // For now, just show a message or keep existing behavior
-      navigate(`/applications-owner/rejected/${app._id}`);
-    }
+  const handleViewApplication = (app) => {
+    navigate(`/applications-owner/application/${app._id}`);
   };
 
+  const rejectedStatuses = ["rejected"];
   const filteredApplications = applications.filter((app) => {
+    if (app.status === "rejected") return false;
+
     if (filterStatus === "all") return true;
     return app.status === filterStatus;
   });
@@ -149,7 +169,16 @@ const OwnerMyApplications = () => {
                 Track the status of your adoption applications
               </p>
             </div>
-            <NotificationBell />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate("/applications-owner/archived")}
+                className="flex items-center gap-2 rounded-xl bg-[#31323e] border border-[#60519b]/20 px-4 py-2 text-sm font-semibold text-[#bfc0d1] transition-all hover:bg-[#3a3b47] hover:border-[#60519b]/40"
+              >
+                <FileText size={16} />
+                Archived
+              </button>
+              <NotificationBell />
+            </div>
           </div>
 
           {/* Filter Tabs */}
@@ -159,7 +188,9 @@ const OwnerMyApplications = () => {
               { value: "submitted", label: "Pending" },
               { value: "review", label: "Under Review" },
               { value: "approved", label: "Approved" },
-              { value: "rejected", label: "Rejected" },
+              { value: "application-rejected", label: "Application Rejected" },
+              { value: "video-verification-reject", label: "Video Rejected" },
+              { value: "final-reject", label: "Final Rejected" },
             ].map((filter) => (
               <button
                 key={filter.value}
@@ -252,30 +283,34 @@ const OwnerMyApplications = () => {
                         </div>
 
                         {/* Rejection Reason */}
-                        {app.status === "rejected" && app.rejectionReason && (
-                          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
-                            <div className="flex items-start gap-2">
-                              <AlertCircle
-                                size={16}
-                                className="mt-0.5 text-red-400 shrink-0"
-                              />
-                              <div>
-                                <p className="text-xs font-semibold text-red-400 mb-1">
-                                  Rejection Reason
-                                </p>
-                                <p className="text-sm text-red-300 leading-relaxed">
-                                  {app.rejectionReason}
-                                </p>
+                        {app.status === "application-rejected" &&
+                          app.rejectionReason && (
+                            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+                              <div className="flex items-start gap-2">
+                                <AlertCircle
+                                  size={16}
+                                  className="mt-0.5 shrink-0 text-red-400"
+                                />
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-red-400">
+                                    Rejection Reason
+                                  </p>
+                                  <p className="text-sm leading-relaxed text-red-300">
+                                    {app.rejectionReason}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Application Details */}
                         <div className="flex items-center gap-6 text-xs text-[#bfc0d1]/60 mb-4">
                           <div className="flex items-center gap-1">
                             <Calendar size={12} />
-                            <span>Applied {formatDate(app.submittedAt)}</span>
+                            <span>
+                              Applied{" "}
+                              {formatDate(app.submittedAt || app.createdAt)}
+                            </span>
                           </div>
                           {app.reviewedAt && (
                             <div className="flex items-center gap-1">
