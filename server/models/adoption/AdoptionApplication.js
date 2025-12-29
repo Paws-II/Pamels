@@ -86,11 +86,26 @@ const adoptionApplicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["submitted", "review", "approved", "rejected", "withdrawn"],
+      enum: [
+        "submitted",
+        "review", //application-approved
+        "approved", //final-approve
+        "rejected", //delete
+        "withdrawn",
+        "video-verification-scheduled",
+        "video-verification-passed",
+        "temp-completed",
+        "application-rejected",
+        "video-verification-reject",
+        "final-reject",
+      ],
       default: "submitted",
       index: true,
     },
-
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
     shelterNotes: { type: String },
 
     scheduledMeeting: {
@@ -121,3 +136,4 @@ const adoptionApplicationSchema = new mongoose.Schema(
 adoptionApplicationSchema.index({ ownerId: 1, petId: 1 });
 
 export default mongoose.model("AdoptionApplication", adoptionApplicationSchema);
+//
