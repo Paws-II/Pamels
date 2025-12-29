@@ -27,6 +27,12 @@ import OwnerChatRoom from "./pages/Owners/OwnerChatRoom.jsx";
 import ShelterChatRoom from "./pages/Shelters/ShelterChatRoom.jsx";
 import ShelterMeetings from "./pages/Shelters/ShelterMeetings.jsx";
 import OwnerMeetings from "./pages/Owners/OwnerMeetings.jsx";
+import ShelterApplicationJourney from "./pages/Shelters/ShelterApplicationJourney.jsx";
+import OwnerApplicationJourney from "./pages/Owners/OwnerApplicationJourney.jsx";
+import OwnerApplicationDetail from "./pages/Owners/OwnerApplicationDetail.jsx";
+import OwnerArchivedApplications from "./pages/Owners/OwnerArchivedApplications.jsx";
+import OwnerArchivedApplicationDetail from "./pages/Owners/OwnerArchivedApplicationDetail.jsx";
+import ShelterArchivedApplications from "./pages/Shelters/ShelterArchivedApplications.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -79,6 +85,37 @@ createRoot(document.getElementById("root")).render(
           />
 
           <Route path="/owner-meetings" element={<OwnerMeetings />} />
+
+          <Route
+            path="/application-journey-shelter"
+            element={<ShelterApplicationJourney />}
+          />
+          <Route
+            path="/application-journey-owner/:applicationId"
+            element={<OwnerApplicationJourney />}
+          />
+
+          <Route
+            path="/applications-owner/application/:applicationId"
+            element={<OwnerApplicationDetail />}
+          />
+
+          <Route path="/applications-owner" element={<OwnerMyApplications />} />
+
+          <Route
+            path="/applications-owner/archived"
+            element={<OwnerArchivedApplications />}
+          />
+
+          <Route
+            path="/applications-owner/archived/:applicationId"
+            element={<OwnerArchivedApplicationDetail />}
+          />
+
+          <Route
+            path="/applications-shelter/archived"
+            element={<ShelterArchivedApplications />}
+          />
         </Routes>
       </BrowserRouter>
     </SocketProvider>

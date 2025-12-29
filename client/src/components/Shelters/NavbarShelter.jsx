@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Shield,
+  Route,
 } from "lucide-react";
 
 const NavbarShelter = ({ onLogout }) => {
@@ -47,6 +48,11 @@ const NavbarShelter = ({ onLogout }) => {
           path: "/applications-shelter",
           icon: FileText,
           label: "Applications",
+        },
+        {
+          path: "/application-journey-shelter",
+          icon: Route,
+          label: "Application Journey",
         },
         { path: "/checkup", icon: Stethoscope, label: "Checkup" },
       ],
