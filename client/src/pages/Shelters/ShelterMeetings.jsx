@@ -31,6 +31,8 @@ const ShelterMeetings = () => {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [applications, setApplications] = useState([]);
+  const [selectedApplicationId, setSelectedApplicationId] = useState("");
 
   const [formData, setFormData] = useState({
     ownerId: "",
@@ -55,18 +57,45 @@ const ShelterMeetings = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const resetForm = () => {
+    setSelectedApplicationId("");
+    setFormData({
+      ownerId: "",
+      scheduledDate: "",
+      scheduledTime: "",
+      durationMinutes: 30,
+      meetingLink: "",
+      meetingPlatform: "google-meet",
+      notes: "",
+    });
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [meetingsRes, ownersRes] = await Promise.all([
+      const [meetingsRes, ownersRes, applicationsRes] = await Promise.all([
         axios.get(`${API_URL}/api/shelter/meetings`, { withCredentials: true }),
         axios.get(`${API_URL}/api/shelter/meetings/eligible-owners`, {
+          withCredentials: true,
+        }),
+        axios.get(`${API_URL}/api/shelter/applications`, {
           withCredentials: true,
         }),
       ]);
 
       if (meetingsRes.data.success) setMeetings(meetingsRes.data.meetings);
       if (ownersRes.data.success) setEligibleOwners(ownersRes.data.owners);
+      if (applicationsRes.data.success) {
+        const flatApplications = applicationsRes.data.data.flatMap((group) =>
+          group.applications.map((app) => ({
+            ...app,
+            petName: group.pet.name,
+            ownerName:
+              app.applicationData?.fullName || app.ownerId?.email || "Unknown",
+          }))
+        );
+        setApplications(flatApplications);
+      }
     } catch (err) {
       setError("Failed to load meetings");
       console.error(err);
@@ -105,6 +134,7 @@ const ShelterMeetings = () => {
         `${API_URL}/api/shelter/meetings`,
         {
           ownerId: formData.ownerId,
+          applicationId: selectedApplicationId,
           scheduledAt,
           durationMinutes: formData.durationMinutes,
           meetingLink: formData.meetingLink,
@@ -122,6 +152,7 @@ const ShelterMeetings = () => {
         });
         setMeetings([res.data.meeting, ...meetings]);
         setShowAddModal(false);
+        setSelectedApplicationId("");
         setFormData({
           ownerId: "",
           scheduledDate: "",
@@ -405,7 +436,6 @@ const ShelterMeetings = () => {
                             </span>
                           </div>
 
-                          {/* META INFO */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#bfc0d1]">
                             <div className="flex items-center gap-2">
                               <Calendar size={16} className="text-[#4a5568]" />
@@ -524,175 +554,231 @@ const ShelterMeetings = () => {
         </div>
       </div>
 
-      {/* Add Meeting Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-[#4a5568]/20 bg-[#31323e] p-8 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">
-                Schedule New Meeting
-              </h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="rounded-lg p-2 text-[#bfc0d1] transition-all hover:bg-white/10"
-              >
-                <X size={20} />
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="flex min-h-screen items-start justify-center px-4 py-10">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#4a5568]/20 bg-[#31323e] p-6 md:p-8 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">
+                  Schedule New Meeting
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    resetForm();
+                  }}
+                  className="rounded-lg p-2 text-[#bfc0d1] transition-all hover:bg-white/10"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddMeeting} className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Select Application
+                  </label>
+                  <select
+                    value={selectedApplicationId}
+                    onChange={(e) => {
+                      const appId = e.target.value;
+                      setSelectedApplicationId(appId);
+
+                      const selectedApp = applications.find(
+                        (app) => app._id === appId
+                      );
+
+                      if (selectedApp) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          ownerId:
+                            selectedApp.ownerId?._id || selectedApp.ownerId,
+                        }));
+                      }
+                    }}
+                    required
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                  >
+                    <option value="">-- Select an application --</option>
+                    {applications
+                      .filter((app) =>
+                        [
+                          "submitted",
+                          "withdrawn",
+                          "review",
+                          "video-verification-scheduled",
+                        ].includes(app.status)
+                      )
+                      .map((app) => (
+                        <option key={app._id} value={app._id}>
+                          {app._id.slice(-6)} |{" "}
+                          {new Date(app.createdAt).toLocaleDateString()} | Pet:{" "}
+                          {app.petName} | Owner: {app.ownerName} | Status:{" "}
+                          {app.status}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Select Owner
+                  </label>
+                  <select
+                    value={formData.ownerId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ownerId: e.target.value })
+                    }
+                    required
+                    disabled={!selectedApplicationId}
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- Select an owner --</option>
+                    {eligibleOwners.map((owner) => (
+                      <option key={owner.ownerId} value={owner.ownerId}>
+                        {owner.name} ({owner.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.scheduledDate}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          scheduledDate: e.target.value,
+                        })
+                      }
+                      min={new Date().toISOString().split("T")[0]}
+                      required
+                      className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-white">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.scheduledTime}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          scheduledTime: e.target.value,
+                        })
+                      }
+                      required
+                      className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.durationMinutes}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        durationMinutes: parseInt(e.target.value),
+                      })
+                    }
+                    min="15"
+                    max="180"
+                    required
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Meeting Platform
+                  </label>
+                  <select
+                    value={formData.meetingPlatform}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        meetingPlatform: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                  >
+                    <option value="google-meet">Google Meet</option>
+                    <option value="zoom">Zoom</option>
+                    <option value="teams">Microsoft Teams</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Meeting Link
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.meetingLink}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        meetingLink: e.target.value,
+                      })
+                    }
+                    placeholder="https://meet.google.com/..."
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
+                    rows="3"
+                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
+                    placeholder="Add any additional information..."
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-lg bg-[#4a5568] py-3 font-semibold text-white transition-all hover:bg-[#5a6678]"
+                  >
+                    Schedule Meeting
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="flex-1 rounded-lg bg-[#1e202c] py-3 font-semibold text-[#bfc0d1] transition-all hover:bg-[#1e202c]/80"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={handleAddMeeting} className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">
-                  Select Owner
-                </label>
-                <select
-                  value={formData.ownerId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, ownerId: e.target.value })
-                  }
-                  required
-                  className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                >
-                  <option value="">-- Select an owner --</option>
-                  {eligibleOwners.map((owner) => (
-                    <option key={owner.ownerId} value={owner.ownerId}>
-                      {owner.name} ({owner.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.scheduledDate}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        scheduledDate: e.target.value,
-                      })
-                    }
-                    min={new Date().toISOString().split("T")[0]}
-                    required
-                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.scheduledTime}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        scheduledTime: e.target.value,
-                      })
-                    }
-                    required
-                    className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">
-                  Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  value={formData.durationMinutes}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      durationMinutes: parseInt(e.target.value),
-                    })
-                  }
-                  min="15"
-                  max="180"
-                  required
-                  className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">
-                  Meeting Platform
-                </label>
-                <select
-                  value={formData.meetingPlatform}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      meetingPlatform: e.target.value,
-                    })
-                  }
-                  className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                >
-                  <option value="google-meet">Google Meet</option>
-                  <option value="zoom">Zoom</option>
-                  <option value="teams">Microsoft Teams</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">
-                  Meeting Link
-                </label>
-                <input
-                  type="url"
-                  value={formData.meetingLink}
-                  onChange={(e) =>
-                    setFormData({ ...formData, meetingLink: e.target.value })
-                  }
-                  placeholder="https://meet.google.com/..."
-                  className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                  rows="3"
-                  className="w-full rounded-lg border border-[#4a5568]/20 bg-[#1e202c] px-4 py-3 text-white focus:border-[#4a5568] focus:outline-none"
-                  placeholder="Add any additional information..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 rounded-lg bg-[#4a5568] py-3 font-semibold text-white transition-all hover:bg-[#5a6678]"
-                >
-                  Schedule Meeting
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 rounded-lg bg-[#1e202c] py-3 font-semibold text-[#bfc0d1] transition-all hover:bg-[#1e202c]/80"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
 
-      {/* Edit Modal - Similar structure to Add Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-2xl rounded-2xl border border-[#4a5568]/20 bg-[#31323e] p-8 shadow-2xl">
@@ -820,7 +906,6 @@ const ShelterMeetings = () => {
         </div>
       )}
 
-      {/* Cancel Modal */}
       {showCancelModal && selectedMeeting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-red-500/20 bg-[#31323e] p-8 shadow-2xl">

@@ -56,6 +56,12 @@ const Navbar = ({ onLogout }) => {
           icon: FileText,
           label: "My Applications",
         },
+
+        {
+          path: "/application-journey-owner",
+          icon: PawPrint,
+          label: "Application Status",
+        },
       ],
     },
     {

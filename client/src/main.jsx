@@ -90,10 +90,6 @@ createRoot(document.getElementById("root")).render(
             path="/application-journey-shelter"
             element={<ShelterApplicationJourney />}
           />
-          <Route
-            path="/application-journey-owner/:applicationId"
-            element={<OwnerApplicationJourney />}
-          />
 
           <Route
             path="/applications-owner/application/:applicationId"
@@ -105,6 +101,11 @@ createRoot(document.getElementById("root")).render(
           <Route
             path="/applications-owner/archived"
             element={<OwnerArchivedApplications />}
+          />
+
+          <Route
+            path="/application-journey-owner"
+            element={<OwnerApplicationJourney />}
           />
 
           <Route

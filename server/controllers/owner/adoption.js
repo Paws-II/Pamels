@@ -298,12 +298,25 @@ const adoptionController = {
 
       const pet = await PetProfile.findOne({
         _id: petId,
-        adoptionStatus: "available",
         isActive: true,
       });
 
       if (!pet) {
         return res.status(404).json({
+          success: false,
+          message: "Pet not found",
+        });
+      }
+
+      if (pet.adoptionStatus === "adopted") {
+        return res.status(400).json({
+          success: false,
+          message: "This pet has already been adopted",
+        });
+      }
+
+      if (pet.adoptionStatus !== "available") {
+        return res.status(400).json({
           success: false,
           message: "Pet not available for adoption",
         });

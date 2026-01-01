@@ -88,24 +88,25 @@ const adoptionApplicationSchema = new mongoose.Schema(
       type: String,
       enum: [
         "submitted",
-        "review", //application-approved
-        "approved", //final-approve
-        "rejected", //delete
         "withdrawn",
+        "review",
+        "application-rejected",
         "video-verification-scheduled",
         "video-verification-passed",
-        "temp-completed",
-        "application-rejected",
         "video-verification-reject",
+        "approved",
+        "rejected",
         "final-reject",
       ],
       default: "submitted",
       index: true,
     },
+
     rejectionReason: {
       type: String,
       default: null,
     },
+
     shelterNotes: { type: String },
 
     scheduledMeeting: {
@@ -127,6 +128,25 @@ const adoptionApplicationSchema = new mongoose.Schema(
       default: false,
     },
 
+    siteVisitPhotos: {
+      photo1: {
+        url: { type: String, default: null },
+        uploadedAt: { type: Date, default: null },
+        geoLocation: {
+          latitude: { type: Number, default: null },
+          longitude: { type: Number, default: null },
+        },
+      },
+      photo2: {
+        url: { type: String, default: null },
+        uploadedAt: { type: Date, default: null },
+        geoLocation: {
+          latitude: { type: Number, default: null },
+          longitude: { type: Number, default: null },
+        },
+      },
+    },
+
     submittedAt: { type: Date, default: Date.now },
     reviewedAt: { type: Date },
   },
@@ -136,4 +156,3 @@ const adoptionApplicationSchema = new mongoose.Schema(
 adoptionApplicationSchema.index({ ownerId: 1, petId: 1 });
 
 export default mongoose.model("AdoptionApplication", adoptionApplicationSchema);
-//

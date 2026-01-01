@@ -185,7 +185,7 @@ const ShelterApplicationDetail = () => {
     try {
       setProcessing(true);
       const res = await axios.patch(
-        `${API_URL}/api/shelter/applications/${applicationId}/reject`,
+        `${API_URL}/api/shelter/applications/${applicationId}/reject-status`,
         { rejectionReason: finalReason },
         { withCredentials: true }
       );
@@ -385,7 +385,6 @@ const ShelterApplicationDetail = () => {
 
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl p-4 md:p-6 lg:p-8">
-          {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={() => navigate("/applications-shelter")}

@@ -303,6 +303,16 @@ const applicationManagementController = {
       application.rejectionReason = rejectionReason;
       application.reviewedAt = new Date();
       await application.save();
+      await CheckPetStatus.findOneAndUpdate(
+        {
+          petId: application.petId,
+          applicationId: application._id,
+        },
+        {
+          activeOwnerId: null,
+          applicationId: null,
+        }
+      );
 
       const pet = await PetProfile.findById(application.petId).lean();
 
@@ -370,7 +380,13 @@ const applicationManagementController = {
       const application = await AdoptionApplication.findOne({
         _id: applicationId,
         shelterId,
-        status: "application-rejected",
+        status: {
+          $in: [
+            "application-rejected",
+            "video-verification-reject",
+            "final-reject",
+          ],
+        },
       }).session(session);
 
       if (!application) {

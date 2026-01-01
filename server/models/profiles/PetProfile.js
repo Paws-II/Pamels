@@ -136,7 +136,7 @@ const petProfileSchema = new mongoose.Schema(
     },
     coverImage: {
       type: String,
-      default: "",
+      default: null,
     },
 
     description: {

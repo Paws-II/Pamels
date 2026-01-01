@@ -82,6 +82,7 @@ const meetingController = {
       const shelterId = req.userId;
       const {
         ownerId,
+        applicationId,
         scheduledAt,
         durationMinutes,
         meetingLink,
@@ -98,26 +99,76 @@ const meetingController = {
         });
       }
 
-      const relationship = await RoomMeetingPet.findOne({
+      if (!applicationId) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: "Application ID is required",
+        });
+      }
+
+      const application = await AdoptionApplication.findOne({
+        _id: applicationId,
         shelterId,
-        ownerId,
-        status: { $in: ["open", "scheduled", "completed"] },
       }).session(session);
 
-      if (!relationship) {
+      if (!application) {
         await session.abortTransaction();
-        return res.status(403).json({
+        return res.status(404).json({
           success: false,
-          message: "No active relationship with this owner",
+          message: "Application not found",
+        });
+      }
+
+      const existingMeeting = await RoomMeetingPet.findOne({
+        applicationId: application._id,
+      }).session(session);
+
+      if (existingMeeting) {
+        if (existingMeeting.status === "open") {
+          existingMeeting.status = "scheduled";
+          existingMeeting.scheduledAt = scheduledDate;
+          existingMeeting.durationMinutes = durationMinutes || 30;
+          existingMeeting.meetingLink = meetingLink;
+          existingMeeting.meetingPlatform = meetingPlatform || "google-meet";
+          existingMeeting.notes = notes || "";
+
+          await existingMeeting.save({ session });
+
+          const rejectedStatuses = [
+            "application-rejected",
+            "video-verification-reject",
+            "final-reject",
+            "rejected",
+          ];
+
+          if (!rejectedStatuses.includes(application.status)) {
+            application.status = "video-verification-scheduled";
+            await application.save({ session });
+          }
+
+          await session.commitTransaction();
+
+          return res.json({
+            success: true,
+            meeting: existingMeeting,
+            reused: true,
+          });
+        }
+
+        await session.abortTransaction();
+        return res.status(400).json({
+          success: false,
+          message: "Meeting already exists for this application",
         });
       }
 
       const meeting = new RoomMeetingPet({
-        ownerId,
-        shelterId,
-        petId: relationship.petId,
-        applicationId: relationship.applicationId,
-        status: "open",
+        ownerId: application.ownerId,
+        shelterId: application.shelterId,
+        petId: application.petId,
+        applicationId: application._id,
+        status: "scheduled",
         scheduledAt: scheduledDate,
         durationMinutes: durationMinutes || 30,
         meetingLink,
@@ -127,37 +178,26 @@ const meetingController = {
 
       await meeting.save({ session });
 
-      meeting.status = "scheduled";
-      await meeting.save({ session });
-      const currentApplication = await AdoptionApplication.findById(
-        relationship.applicationId
-      ).session(session);
+      const rejectedStatuses = [
+        "application-rejected",
+        "video-verification-reject",
+        "final-reject",
+        "rejected",
+      ];
 
-      if (currentApplication) {
-        const rejectedStatuses = [
-          "application-reject",
-          "video-verification-reject",
-          "final-reject",
-          "rejected",
-        ];
-
-        if (!rejectedStatuses.includes(currentApplication.status)) {
-          await AdoptionApplication.findOneAndUpdate(
-            { _id: relationship.applicationId },
-            { status: "video-verification-scheduled" },
-            { session }
-          );
-        }
+      if (!rejectedStatuses.includes(application.status)) {
+        application.status = "video-verification-scheduled";
+        await application.save({ session });
       }
 
-      const ownerProfile = await OwnerProfile.findOne({ ownerId }).session(
-        session
-      );
+      const ownerProfile = await OwnerProfile.findOne({
+        ownerId: application.ownerId,
+      }).session(session);
 
       await Notification.create(
         [
           {
-            userId: ownerId,
+            userId: application.ownerId,
             userModel: "OwnerLogin",
             type: "general",
             title: "Meeting Scheduled",
@@ -166,6 +206,7 @@ const meetingController = {
               meetingId: meeting._id,
               shelterId,
               scheduledAt: scheduledDate,
+              applicationId: application._id,
             },
           },
         ],
@@ -175,13 +216,15 @@ const meetingController = {
       await session.commitTransaction();
 
       if (req.app.locals.io) {
-        req.app.locals.io.to(`user:${ownerId}`).emit("notification:new", {
-          title: "Meeting Scheduled",
-          message: `A meeting has been scheduled with the shelter`,
-          type: "general",
-          read: false,
-          createdAt: new Date(),
-        });
+        req.app.locals.io
+          .to(`user:${application.ownerId}`)
+          .emit("notification:new", {
+            title: "Meeting Scheduled",
+            message: `A meeting has been scheduled with the shelter`,
+            type: "general",
+            read: false,
+            createdAt: new Date(),
+          });
       }
 
       const populatedMeeting = await RoomMeetingPet.findById(meeting._id)
@@ -373,11 +416,10 @@ const meetingController = {
     try {
       const { meetingId } = req.params;
       const shelterId = req.userId;
-
       const meeting = await RoomMeetingPet.findOne({
         _id: meetingId,
         shelterId,
-        status: "scheduled",
+        status: { $in: ["open", "scheduled"] },
       });
 
       if (!meeting) {
