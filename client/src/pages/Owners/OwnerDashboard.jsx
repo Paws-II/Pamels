@@ -10,6 +10,7 @@ import {
   MapPin,
   Package,
   Phone,
+  PawPrint,
   User,
 } from "lucide-react";
 
@@ -18,6 +19,10 @@ import FullPageLoader from "../../Common/FullPageLoader";
 import defaultAvatar from "../../assets/Owner/default-owner.png";
 import NotificationBell from "../../Common/NotificationBell";
 
+import AdoptedPetCard from "../../components/Owners/MyPets/AdoptedPetCard";
+import AdoptedPetDetails from "../../components/Owners/MyPets/AdoptedPetDetails";
+import OwnerToast from "../../Common/OwnerToast";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const OwnerDashboard = () => {
@@ -25,10 +30,20 @@ const OwnerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("profile");
+  const [adoptedPets, setAdoptedPets] = useState([]);
+  const [petsLoading, setPetsLoading] = useState(false);
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "mypets") {
+      fetchAdoptedPets();
+    }
+  }, [activeTab]);
 
   const fetchProfile = async () => {
     try {
@@ -47,6 +62,37 @@ const OwnerDashboard = () => {
     }
   };
 
+  const fetchAdoptedPets = async () => {
+    setPetsLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/owner/adopted-pets`, {
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        setAdoptedPets(response.data.pets);
+
+        if (response.data.pets.length === 0) {
+          setToast({
+            type: "info",
+            title: "No Adopted Pets",
+            message:
+              "You haven't adopted any pets yet. Visit Adopt a Pet to start!",
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Fetch adopted pets error:", err);
+      setToast({
+        type: "error",
+        title: "Error",
+        message: "Failed to load your adopted pets",
+      });
+    } finally {
+      setPetsLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -59,6 +105,14 @@ const OwnerDashboard = () => {
     } catch (err) {
       console.error("Logout error:", err);
     }
+  };
+
+  const handleViewDetails = (pet) => {
+    setSelectedPet(pet);
+  };
+
+  const handleBackToPets = () => {
+    setSelectedPet(null);
   };
 
   const ownerData = {
@@ -100,6 +154,14 @@ const OwnerDashboard = () => {
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
           <div className="mb-4 flex justify-end">
+            {toast && (
+              <OwnerToast
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+                onClose={() => setToast(null)}
+              />
+            )}
             <NotificationBell />
           </div>
           <div className="mb-8">
@@ -120,7 +182,7 @@ const OwnerDashboard = () => {
 
           <div className="mb-8 flex justify-center">
             <div className="flex gap-2 rounded-xl bg-[#31323e] p-2 shadow-xl shadow-black/20">
-              {["profile", "pets", "store"].map((tab) => (
+              {["profile", "mypets", "Blogs"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -130,7 +192,9 @@ const OwnerDashboard = () => {
                       : "text-[#bfc0d1] hover:bg-[#3a3b47] hover:text-white hover:scale-105"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "mypets"
+                    ? "My Pets"
+                    : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
@@ -377,28 +441,71 @@ const OwnerDashboard = () => {
               </div>
             )}
 
-            {activeTab === "pets" && (
-              <div className="space-y-6">
-                <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">My Pets</h2>
-                  <button className="rounded-lg bg-linear-to-r from-[#60519b] to-[#7d6ab8] px-4 py-2 font-medium text-white transition-all hover:shadow-lg hover:shadow-[#60519b]/30">
-                    Add New Pet
-                  </button>
-                </div>
+            {activeTab === "mypets" && (
+              <div>
+                {selectedPet ? (
+                  <AdoptedPetDetails
+                    pet={selectedPet}
+                    onBack={handleBackToPets}
+                  />
+                ) : (
+                  <div>
+                    {petsLoading ? (
+                      <div className="flex items-center justify-center py-20">
+                        <div className="text-center">
+                          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-[#60519b]/30 border-t-[#60519b]" />
+                          <p className="text-sm text-[#bfc0d1]">
+                            Loading your pets...
+                          </p>
+                        </div>
+                      </div>
+                    ) : adoptedPets.length === 0 ? (
+                      <div className="rounded-2xl border border-[#60519b]/20 bg-[#31323e] p-12 text-center">
+                        <PawPrint
+                          size={64}
+                          className="mx-auto mb-4 text-[#60519b]/40"
+                        />
+                        <h3 className="mb-2 text-xl font-bold text-white">
+                          No Adopted Pets Yet
+                        </h3>
+                        <p className="mb-6 text-sm text-[#bfc0d1]">
+                          Start your adoption journey and give a pet a loving
+                          home
+                        </p>
+                        <Link
+                          to="/adopt-pet"
+                          className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-[#60519b] to-[#7d6ab8] px-6 py-3 text-sm font-semibold text-white transition-all hover:scale-105"
+                        >
+                          Adopt a Pet
+                        </Link>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-6 flex items-center justify-between">
+                          <div>
+                            <h2 className="text-2xl font-bold text-white">
+                              My Adopted Pets
+                            </h2>
+                            <p className="mt-1 text-sm text-[#bfc0d1]">
+                              {adoptedPets.length} pet
+                              {adoptedPets.length !== 1 ? "s" : ""} in your care
+                            </p>
+                          </div>
+                        </div>
 
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="rounded-2xl border border-[#60519b]/20 bg-[#31323e] p-6 transition-all hover:border-[#60519b]/40"
-                    >
-                      <div className="mb-4 aspect-square rounded-xl bg-[#1e202c]/50" />
-                      <div className="mb-3 h-5 rounded bg-[#60519b]/20" />
-                      <div className="mb-2 h-4 rounded bg-[#60519b]/10" />
-                      <div className="h-4 w-2/3 rounded bg-[#60519b]/10" />
-                    </div>
-                  ))}
-                </div>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+                          {adoptedPets.map((pet) => (
+                            <AdoptedPetCard
+                              key={pet._id}
+                              pet={pet}
+                              onViewDetails={handleViewDetails}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
