@@ -44,7 +44,7 @@ const App = () => {
 
       <DoDont />
 
-      <Stories />
+      {/* <Stories /> */}
       <Conclusion />
       <Testimonials />
       <Faq />

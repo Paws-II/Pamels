@@ -154,7 +154,7 @@ const HowItWorks = () => {
       ref={sectionRef}
       style={{
         position: "relative",
-        minHeight: "100vh",
+        minHeight: "70vh",
         paddingTop: "clamp(80px, 12vh, 140px)",
         paddingBottom: "clamp(80px, 12vh, 140px)",
         paddingLeft: "24px",
